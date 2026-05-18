@@ -1,6 +1,33 @@
 @FamilyPlanner.Api_HostAddress = http://localhost:5123
 
-GET {{FamilyPlanner.Api_HostAddress}}/weatherforecast/
+GET {{FamilyPlanner.Api_HostAddress}}/
 Accept: application/json
+
+###
+
+GET {{FamilyPlanner.Api_HostAddress}}/api/meals
+Accept: application/json
+
+###
+
+GET {{FamilyPlanner.Api_HostAddress}}/api/weekplans/current
+Accept: application/json
+
+###
+
+GET {{FamilyPlanner.Api_HostAddress}}/api/grocerylist/current
+Accept: application/json
+
+###
+
+POST {{FamilyPlanner.Api_HostAddress}}/api/grocerylist/current/items
+Content-Type: application/json
+
+{
+  "name": "Milk",
+  "quantity": "1",
+  "unit": "carton",
+  "notes": "Whole milk"
+}
 
 ###
