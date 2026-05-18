@@ -1,14 +1,7 @@
 import { useMemo, useState } from 'react'
 import { PageHeader } from '../components/PageHeader'
-import type { DayOfWeek } from '../types/weekPlan'
-
-type MockMeal = {
-  id: number
-  name: string
-  shortDescription: string
-}
-
-type PlannedMealByDay = Partial<Record<DayOfWeek, MockMeal>>
+import type { Meal } from '../types/meal'
+import type { DayOfWeek, PlannedMealsByDay } from '../types/weekPlan'
 
 const weekdays: DayOfWeek[] = [
   'Monday',
@@ -20,42 +13,19 @@ const weekdays: DayOfWeek[] = [
   'Sunday',
 ]
 
-const mockMeals: MockMeal[] = [
-  {
-    id: 1,
-    name: 'Taco Bowls',
-    shortDescription: 'Rice, beans, vegetables, salsa',
-  },
-  {
-    id: 2,
-    name: 'Pasta with Tomato Sauce',
-    shortDescription: 'Fast pasta night with parmesan',
-  },
-  {
-    id: 3,
-    name: 'Sheet Pan Salmon',
-    shortDescription: 'Salmon, potatoes, broccoli, lemon',
-  },
-  {
-    id: 4,
-    name: 'Vegetable Fried Rice',
-    shortDescription: 'Leftover rice, eggs, mixed vegetables',
-  },
-  {
-    id: 5,
-    name: 'Chicken Wraps',
-    shortDescription: 'Tortillas, chicken, salad, dressing',
-  },
-]
-
-const initialPlan: PlannedMealByDay = {
-  Monday: mockMeals[0],
-  Wednesday: mockMeals[1],
-  Friday: mockMeals[2],
+type WeekViewPageProps = {
+  availableMeals: Meal[]
+  plannedMeals: PlannedMealsByDay
+  onAssignMeal: (day: DayOfWeek, meal: Meal) => void
+  onClearMeal: (day: DayOfWeek) => void
 }
 
-export function WeekViewPage() {
-  const [plannedMeals, setPlannedMeals] = useState<PlannedMealByDay>(initialPlan)
+export function WeekViewPage({
+  availableMeals,
+  plannedMeals,
+  onAssignMeal,
+  onClearMeal,
+}: WeekViewPageProps) {
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('Monday')
 
   const selectedMeal = plannedMeals[selectedDay]
@@ -63,21 +33,6 @@ export function WeekViewPage() {
     () => weekdays.filter((day) => plannedMeals[day]).length,
     [plannedMeals],
   )
-
-  function assignMeal(day: DayOfWeek, meal: MockMeal) {
-    setPlannedMeals((currentPlan) => ({
-      ...currentPlan,
-      [day]: meal,
-    }))
-  }
-
-  function clearMeal(day: DayOfWeek) {
-    setPlannedMeals((currentPlan) => {
-      const nextPlan = { ...currentPlan }
-      delete nextPlan[day]
-      return nextPlan
-    })
-  }
 
   return (
     <section>
@@ -128,7 +83,7 @@ export function WeekViewPage() {
                     <div>
                       <p className="font-medium text-ink">{meal.name}</p>
                       <p className="mt-2 text-sm leading-6 text-slate-600">
-                        {meal.shortDescription}
+                        {getMealSummary(meal)}
                       </p>
                     </div>
                   ) : (
@@ -148,7 +103,7 @@ export function WeekViewPage() {
                     {meal && (
                       <button
                         type="button"
-                        onClick={() => clearMeal(day)}
+                        onClick={() => onClearMeal(day)}
                         className="min-h-10 rounded-md bg-slate-100 px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
                       >
                         Clear
@@ -171,14 +126,14 @@ export function WeekViewPage() {
           </div>
 
           <div className="mt-4 space-y-2">
-            {mockMeals.map((meal) => {
+            {availableMeals.map((meal) => {
               const isAssignedToSelectedDay = selectedMeal?.id === meal.id
 
               return (
                 <button
                   key={meal.id}
                   type="button"
-                  onClick={() => assignMeal(selectedDay, meal)}
+                  onClick={() => onAssignMeal(selectedDay, meal)}
                   className={[
                     'w-full rounded-md border p-3 text-left transition',
                     isAssignedToSelectedDay
@@ -190,7 +145,7 @@ export function WeekViewPage() {
                     {meal.name}
                   </span>
                   <span className="mt-1 block text-sm leading-6 text-slate-600">
-                    {meal.shortDescription}
+                    {getMealSummary(meal)}
                   </span>
                 </button>
               )
@@ -200,7 +155,7 @@ export function WeekViewPage() {
           {selectedMeal && (
             <button
               type="button"
-              onClick={() => clearMeal(selectedDay)}
+              onClick={() => onClearMeal(selectedDay)}
               className="mt-4 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
               Remove meal from {selectedDay}
@@ -210,4 +165,12 @@ export function WeekViewPage() {
       </div>
     </section>
   )
+}
+
+function getMealSummary(meal: Meal) {
+  if (meal.ingredients.length > 0) {
+    return meal.ingredients.join(', ')
+  }
+
+  return meal.recipeInstructions || 'No meal details yet.'
 }

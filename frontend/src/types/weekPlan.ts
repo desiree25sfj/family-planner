@@ -1,3 +1,5 @@
+import type { Meal } from './meal'
+
 export type DayOfWeek =
   | 'Monday'
   | 'Tuesday'
@@ -34,3 +36,5 @@ export type CreatePlannedMealRequest = {
 }
 
 export type UpdatePlannedMealRequest = CreatePlannedMealRequest
+
+export type PlannedMealsByDay = Partial<Record<DayOfWeek, Meal>>
