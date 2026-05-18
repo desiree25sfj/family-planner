@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { PageHeader } from '../components/PageHeader'
-import type { Meal } from '../types/meal'
+import type { CreateMealRequest, Meal, UpdateMealRequest } from '../types/meal'
 
 type MealFormState = {
   name: string
@@ -14,35 +14,24 @@ const emptyForm: MealFormState = {
   ingredientsText: '',
 }
 
-const initialMeals: Meal[] = [
-  {
-    id: 1,
-    name: 'Taco Bowls',
-    recipeInstructions:
-      'Cook rice, warm beans with taco seasoning, chop vegetables, and serve with salsa.',
-    ingredients: ['Rice', 'Black beans', 'Tomatoes', 'Salsa'],
-  },
-  {
-    id: 2,
-    name: 'Pasta with Tomato Sauce',
-    recipeInstructions: 'Boil pasta, warm tomato sauce, and finish with parmesan.',
-    ingredients: ['Pasta', 'Tomato sauce', 'Parmesan'],
-  },
-  {
-    id: 3,
-    name: 'Sheet Pan Dinner',
-    recipeInstructions:
-      'Roast salmon, potatoes, and broccoli together until cooked through.',
-    ingredients: ['Salmon', 'Potatoes', 'Broccoli', 'Lemon'],
-  },
-]
+type MealsPageProps = {
+  meals: Meal[]
+  onCreateMeal: (meal: CreateMealRequest) => Promise<void>
+  onUpdateMeal: (id: number, meal: UpdateMealRequest) => Promise<void>
+  onDeleteMeal: (id: number) => Promise<void>
+}
 
-export function MealsPage() {
-  const [meals, setMeals] = useState<Meal[]>(initialMeals)
+export function MealsPage({
+  meals,
+  onCreateMeal,
+  onUpdateMeal,
+  onDeleteMeal,
+}: MealsPageProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingMealId, setEditingMealId] = useState<number | null>(null)
   const [form, setForm] = useState<MealFormState>(emptyForm)
   const [nameError, setNameError] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
 
   const editingMeal = useMemo(
     () => meals.find((meal) => meal.id === editingMealId) ?? null,
@@ -75,7 +64,7 @@ export function MealsPage() {
     setNameError('')
   }
 
-  function saveMeal(event: FormEvent<HTMLFormElement>) {
+  async function saveMeal(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     const name = form.name.trim()
@@ -89,37 +78,27 @@ export function MealsPage() {
       .map((ingredient) => ingredient.trim())
       .filter(Boolean)
 
-    if (editingMeal) {
-      setMeals((currentMeals) =>
-        currentMeals.map((meal) =>
-          meal.id === editingMeal.id
-            ? {
-                ...meal,
-                name,
-                recipeInstructions: form.recipeInstructions.trim() || null,
-                ingredients,
-              }
-            : meal,
-        ),
-      )
-    } else {
-      const nextId = Math.max(0, ...meals.map((meal) => meal.id)) + 1
-      setMeals((currentMeals) => [
-        {
-          id: nextId,
-          name,
-          recipeInstructions: form.recipeInstructions.trim() || null,
-          ingredients,
-        },
-        ...currentMeals,
-      ])
+    const mealPayload = {
+      name,
+      recipeInstructions: form.recipeInstructions.trim(),
+      ingredients,
     }
+
+    setIsSaving(true)
+
+    if (editingMeal) {
+      await onUpdateMeal(editingMeal.id, mealPayload)
+    } else {
+      await onCreateMeal(mealPayload)
+    }
+
+    setIsSaving(false)
 
     closeModal()
   }
 
-  function deleteMeal(mealId: number) {
-    setMeals((currentMeals) => currentMeals.filter((meal) => meal.id !== mealId))
+  async function deleteMeal(mealId: number) {
+    await onDeleteMeal(mealId)
 
     if (editingMealId === mealId) {
       closeModal()
@@ -289,9 +268,10 @@ export function MealsPage() {
                 </button>
                 <button
                   type="submit"
+                  disabled={isSaving}
                   className="min-h-10 rounded-md bg-ink px-4 text-sm font-medium text-white transition hover:bg-slate-800"
                 >
-                  Save Meal
+                  {isSaving ? 'Saving...' : 'Save Meal'}
                 </button>
               </div>
             </form>

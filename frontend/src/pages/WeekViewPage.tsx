@@ -28,7 +28,7 @@ export function WeekViewPage({
 }: WeekViewPageProps) {
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('Monday')
 
-  const selectedMeal = plannedMeals[selectedDay]
+  const selectedMeal = plannedMeals[selectedDay]?.meal
   const plannedMealCount = useMemo(
     () => weekdays.filter((day) => plannedMeals[day]).length,
     [plannedMeals],
@@ -56,7 +56,7 @@ export function WeekViewPage({
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-7">
           {weekdays.map((day) => {
-            const meal = plannedMeals[day]
+            const meal = plannedMeals[day]?.meal
             const isSelected = selectedDay === day
 
             return (

@@ -32,8 +32,8 @@ export function GroceryPage({ plannedMeals }: GroceryPageProps) {
   const generatedItems = useMemo(() => {
     const ingredientsByName = new Map<string, string>()
 
-    Object.values(plannedMeals).forEach((meal) => {
-      meal?.ingredients.forEach((ingredient) => {
+    Object.values(plannedMeals).forEach((assignment) => {
+      assignment?.meal.ingredients.forEach((ingredient) => {
         const name = ingredient.trim()
 
         if (!name) {
@@ -171,7 +171,7 @@ export function GroceryPage({ plannedMeals }: GroceryPageProps) {
                       item.isCompleted ? 'incomplete' : 'complete'
                     }`}
                   >
-                    ✓
+                    x
                   </button>
 
                   <div className="min-w-0 flex-1">

@@ -17,6 +17,15 @@ builder.Services.AddDbContext<FamilyPlannerDbContext>(options =>
 builder.Services.AddScoped<MealService>();
 builder.Services.AddScoped<WeekPlanService>();
 builder.Services.AddScoped<GroceryListService>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendDev", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -44,6 +53,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("FrontendDev");
 
 app.MapGet("/", () => Results.Ok(new { app = "Family Planner API" }));
 app.MapControllers();

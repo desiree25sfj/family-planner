@@ -37,4 +37,9 @@ export type CreatePlannedMealRequest = {
 
 export type UpdatePlannedMealRequest = CreatePlannedMealRequest
 
-export type PlannedMealsByDay = Partial<Record<DayOfWeek, Meal>>
+export type PlannedMealAssignment = {
+  plannedMealId: number
+  meal: Meal
+}
+
+export type PlannedMealsByDay = Partial<Record<DayOfWeek, PlannedMealAssignment>>
