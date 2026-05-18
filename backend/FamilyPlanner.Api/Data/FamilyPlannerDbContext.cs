@@ -9,7 +9,7 @@ public class FamilyPlannerDbContext(DbContextOptions<FamilyPlannerDbContext> opt
     public DbSet<Meal> Meals => Set<Meal>();
     public DbSet<MealIngredient> MealIngredients => Set<MealIngredient>();
     public DbSet<WeekPlan> WeekPlans => Set<WeekPlan>();
-    public DbSet<PlannedDinner> PlannedDinners => Set<PlannedDinner>();
+    public DbSet<PlannedMeal> PlannedMeals => Set<PlannedMeal>();
     public DbSet<GroceryItem> GroceryItems => Set<GroceryItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -51,22 +51,23 @@ public class FamilyPlannerDbContext(DbContextOptions<FamilyPlannerDbContext> opt
             entity.Property(plan => plan.Notes).HasMaxLength(500);
         });
 
-        modelBuilder.Entity<PlannedDinner>(entity =>
+        modelBuilder.Entity<PlannedMeal>(entity =>
         {
-            entity.Property(dinner => dinner.CustomDinnerName).HasMaxLength(120);
-            entity.Property(dinner => dinner.Notes).HasMaxLength(500);
+            entity.Property(plannedMeal => plannedMeal.AssignedFamilyMemberName).HasMaxLength(80);
 
-            entity.HasIndex(dinner => new { dinner.WeekPlanId, dinner.DayOfWeek }).IsUnique();
+            // One planned meal per day keeps the weekly planner predictable and
+            // maps directly to the MVP screen: seven weekday slots, no calendar gymnastics.
+            entity.HasIndex(plannedMeal => new { plannedMeal.WeekPlanId, plannedMeal.DayOfWeek }).IsUnique();
 
-            entity.HasOne(dinner => dinner.WeekPlan)
-                .WithMany(plan => plan.PlannedDinners)
-                .HasForeignKey(dinner => dinner.WeekPlanId)
+            entity.HasOne(plannedMeal => plannedMeal.WeekPlan)
+                .WithMany(plan => plan.PlannedMeals)
+                .HasForeignKey(plannedMeal => plannedMeal.WeekPlanId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasOne(dinner => dinner.Meal)
-                .WithMany(meal => meal.PlannedDinners)
-                .HasForeignKey(dinner => dinner.MealId)
-                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(plannedMeal => plannedMeal.Meal)
+                .WithMany(meal => meal.PlannedMeals)
+                .HasForeignKey(plannedMeal => plannedMeal.MealId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<GroceryItem>(entity =>

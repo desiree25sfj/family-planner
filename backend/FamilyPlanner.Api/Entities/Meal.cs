@@ -8,5 +8,5 @@ public class Meal
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAtUtc { get; set; }
     public List<MealIngredient> Ingredients { get; set; } = [];
-    public List<PlannedDinner> PlannedDinners { get; set; } = [];
+    public List<PlannedMeal> PlannedMeals { get; set; } = [];
 }
