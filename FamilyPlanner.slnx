@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/backend/">
+    <Project Path="backend/FamilyPlanner.Api/FamilyPlanner.Api.csproj" />
+  </Folder>
+</Solution>
