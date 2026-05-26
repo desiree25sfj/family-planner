@@ -1,3 +1,4 @@
+using FamilyPlanner.Api.Common;
 using FamilyPlanner.Api.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -57,7 +58,7 @@ public static class DevelopmentDataSeeder
 
         await dbContext.SaveChangesAsync();
 
-        var weekStartDate = GetCurrentWeekStartDate();
+        var weekStartDate = WeekDateHelper.GetCurrentWeekStartDate();
         var currentWeekPlan = await dbContext.WeekPlans
             .Include(plan => plan.PlannedMeals)
             .FirstOrDefaultAsync(plan => plan.WeekStartDate == weekStartDate);
@@ -84,13 +85,5 @@ public static class DevelopmentDataSeeder
         }
 
         await dbContext.SaveChangesAsync();
-    }
-
-    private static DateOnly GetCurrentWeekStartDate()
-    {
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        var daysSinceMonday = ((int)today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
-
-        return today.AddDays(-daysSinceMonday);
     }
 }

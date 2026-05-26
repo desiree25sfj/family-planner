@@ -9,6 +9,8 @@ type GroceryPageProps = {
   onAddManualItem: (name: string) => boolean | Promise<boolean>
   onToggleItem: (item: GroceryItemResponseDto) => void | Promise<void>
   onRemoveItem: (item: GroceryItemResponseDto) => void | Promise<void>
+  isAddingItem: boolean
+  pendingItemIds: Set<number>
 }
 
 export function GroceryPage({
@@ -18,6 +20,8 @@ export function GroceryPage({
   onAddManualItem,
   onToggleItem,
   onRemoveItem,
+  isAddingItem,
+  pendingItemIds,
 }: GroceryPageProps) {
   const [manualItemName, setManualItemName] = useState('')
 
@@ -56,6 +60,7 @@ export function GroceryPage({
                   <button
                     type="button"
                     onClick={() => onToggleItem(item)}
+                    disabled={pendingItemIds.has(item.id)}
                     className={[
                       'flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs font-bold transition',
                       item.isCompleted
@@ -88,6 +93,7 @@ export function GroceryPage({
                   <button
                     type="button"
                     onClick={() => onRemoveItem(item)}
+                    disabled={pendingItemIds.has(item.id)}
                     className="min-h-9 rounded-md bg-slate-100 px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
                   >
                     Remove
@@ -122,9 +128,10 @@ export function GroceryPage({
             />
             <button
               type="submit"
+              disabled={isAddingItem}
               className="min-h-11 rounded-md bg-ink px-4 text-sm font-medium text-white transition hover:bg-slate-800"
             >
-              Add
+              {isAddingItem ? 'Adding...' : 'Add'}
             </button>
           </form>
         </aside>

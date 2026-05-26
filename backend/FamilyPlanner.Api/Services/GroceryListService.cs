@@ -1,3 +1,4 @@
+using FamilyPlanner.Api.Common;
 using FamilyPlanner.Api.Data;
 using FamilyPlanner.Api.DTOs;
 using FamilyPlanner.Api.Entities;
@@ -37,7 +38,7 @@ public class GroceryListService(FamilyPlannerDbContext dbContext)
 
     public async Task<GroceryItemResponseDto?> UpdateCurrentItemAsync(int id, UpdateGroceryItemDto dto)
     {
-        var weekStartDate = GetCurrentWeekStartDate();
+        var weekStartDate = WeekDateHelper.GetCurrentWeekStartDate();
         var item = await dbContext.GroceryItems
             .Include(groceryItem => groceryItem.WeekPlan)
             .FirstOrDefaultAsync(groceryItem =>
@@ -80,7 +81,7 @@ public class GroceryListService(FamilyPlannerDbContext dbContext)
 
     public async Task<bool> DeleteCurrentItemAsync(int id)
     {
-        var weekStartDate = GetCurrentWeekStartDate();
+        var weekStartDate = WeekDateHelper.GetCurrentWeekStartDate();
         var item = await dbContext.GroceryItems
             .Include(groceryItem => groceryItem.WeekPlan)
             .FirstOrDefaultAsync(groceryItem =>
@@ -170,7 +171,7 @@ public class GroceryListService(FamilyPlannerDbContext dbContext)
 
     private async Task<WeekPlan> GetOrCreateCurrentWeekPlanAsync()
     {
-        var weekStartDate = GetCurrentWeekStartDate();
+        var weekStartDate = WeekDateHelper.GetCurrentWeekStartDate();
         var weekPlan = await dbContext.WeekPlans
             .Include(plan => plan.PlannedMeals)
             .ThenInclude(plannedMeal => plannedMeal.Meal)
@@ -218,14 +219,6 @@ public class GroceryListService(FamilyPlannerDbContext dbContext)
             IsCompleted = item.IsChecked,
             IsManuallyAdded = item.IsManuallyAdded
         };
-    }
-
-    private static DateOnly GetCurrentWeekStartDate()
-    {
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        var daysSinceMonday = ((int)today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
-
-        return today.AddDays(-daysSinceMonday);
     }
 
     private static string NormalizeRequiredText(string value)

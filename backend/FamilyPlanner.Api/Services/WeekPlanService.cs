@@ -1,6 +1,7 @@
 using FamilyPlanner.Api.Data;
 using FamilyPlanner.Api.DTOs;
 using FamilyPlanner.Api.Entities;
+using FamilyPlanner.Api.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace FamilyPlanner.Api.Services;
@@ -60,7 +61,7 @@ public class WeekPlanService(FamilyPlannerDbContext dbContext)
             return PlannedMealOperationResult.Validation("MealId does not match an existing meal.");
         }
 
-        var weekStartDate = GetCurrentWeekStartDate();
+        var weekStartDate = WeekDateHelper.GetCurrentWeekStartDate();
         var plannedMeal = await dbContext.PlannedMeals
             .Include(meal => meal.WeekPlan)
             .Include(meal => meal.Meal)
@@ -93,7 +94,7 @@ public class WeekPlanService(FamilyPlannerDbContext dbContext)
 
     public async Task<bool> DeleteCurrentMealAsync(int id)
     {
-        var weekStartDate = GetCurrentWeekStartDate();
+        var weekStartDate = WeekDateHelper.GetCurrentWeekStartDate();
         var plannedMeal = await dbContext.PlannedMeals
             .Include(meal => meal.WeekPlan)
             .FirstOrDefaultAsync(meal => meal.Id == id && meal.WeekPlan.WeekStartDate == weekStartDate);
@@ -111,7 +112,7 @@ public class WeekPlanService(FamilyPlannerDbContext dbContext)
 
     private async Task<WeekPlan> GetOrCreateCurrentWeekPlanAsync()
     {
-        var weekStartDate = GetCurrentWeekStartDate();
+        var weekStartDate = WeekDateHelper.GetCurrentWeekStartDate();
         var weekPlan = await dbContext.WeekPlans
             .Include(plan => plan.PlannedMeals)
             .ThenInclude(plannedMeal => plannedMeal.Meal)
@@ -167,14 +168,6 @@ public class WeekPlanService(FamilyPlannerDbContext dbContext)
             MealName = plannedMeal.Meal.Name,
             AssignedFamilyMemberName = plannedMeal.AssignedFamilyMemberName
         };
-    }
-
-    private static DateOnly GetCurrentWeekStartDate()
-    {
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        var daysSinceMonday = ((int)today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
-
-        return today.AddDays(-daysSinceMonday);
     }
 
     private static string? NormalizeOptionalText(string? value)

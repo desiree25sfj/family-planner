@@ -18,6 +18,7 @@ type WeekViewPageProps = {
   plannedMeals: PlannedMealsByDay
   onAssignMeal: (day: DayOfWeek, meal: MealResponseDto) => void
   onClearMeal: (day: DayOfWeek) => void
+  isSaving: boolean
 }
 
 export function WeekViewPage({
@@ -25,6 +26,7 @@ export function WeekViewPage({
   plannedMeals,
   onAssignMeal,
   onClearMeal,
+  isSaving,
 }: WeekViewPageProps) {
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('Monday')
 
@@ -96,6 +98,7 @@ export function WeekViewPage({
                     <button
                       type="button"
                       onClick={() => setSelectedDay(day)}
+                      disabled={isSaving}
                       className="min-h-10 rounded-md bg-ink px-3 text-sm font-medium text-white transition hover:bg-slate-800"
                     >
                       {meal ? 'Edit meal' : 'Assign meal'}
@@ -104,6 +107,7 @@ export function WeekViewPage({
                       <button
                         type="button"
                         onClick={() => onClearMeal(day)}
+                        disabled={isSaving}
                         className="min-h-10 rounded-md bg-slate-100 px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
                       >
                         Clear
@@ -134,6 +138,7 @@ export function WeekViewPage({
                   key={meal.id}
                   type="button"
                   onClick={() => onAssignMeal(selectedDay, meal)}
+                  disabled={isSaving}
                   className={[
                     'w-full rounded-md border p-3 text-left transition',
                     isAssignedToSelectedDay
@@ -156,6 +161,7 @@ export function WeekViewPage({
             <button
               type="button"
               onClick={() => onClearMeal(selectedDay)}
+              disabled={isSaving}
               className="mt-4 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
               Remove meal from {selectedDay}

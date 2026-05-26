@@ -4,12 +4,19 @@ import { GroceryPage } from './pages/GroceryPage'
 import { MealsPage } from './pages/MealsPage'
 import { WeekViewPage } from './pages/WeekViewPage'
 import { groceryApi } from './services/groceryApi'
+import { getApiErrorMessage } from './services/apiClient'
 import { mealsApi } from './services/mealsApi'
 import { weekPlanApi } from './services/weekPlanApi'
 import type { GroceryItemResponseDto } from './types/grocery'
 import type { CreateMealDto, MealResponseDto, UpdateMealDto } from './types/meal'
 import type { AppPage } from './types/navigation'
-import type { DayOfWeek, PlannedMealsByDay, WeekPlanResponseDto } from './types/weekPlan'
+import type { DayOfWeek, PlannedMealsByDay } from './types/weekPlan'
+import { sortGroceryItems } from './utils/groceryUtils'
+import {
+  removeMealFromPlannedMeals,
+  toPlannedMealsByDay,
+  updateMealInPlannedMeals,
+} from './utils/weekPlanUtils'
 
 function App() {
   const [activePage, setActivePage] = useState<AppPage>('week')
@@ -17,6 +24,11 @@ function App() {
   const [plannedMeals, setPlannedMeals] = useState<PlannedMealsByDay>({})
   const [groceryItems, setGroceryItems] = useState<GroceryItemResponseDto[]>([])
   const [statusMessage, setStatusMessage] = useState('Loading planner data...')
+  const [isWeekPlanSaving, setIsWeekPlanSaving] = useState(false)
+  const [isAddingGroceryItem, setIsAddingGroceryItem] = useState(false)
+  const [pendingGroceryItemIds, setPendingGroceryItemIds] = useState<Set<number>>(
+    () => new Set(),
+  )
 
   useEffect(() => {
     loadPlannerData()
@@ -32,11 +44,13 @@ function App() {
       setPlannedMeals(toPlannedMealsByDay(loadedWeekPlan, loadedMeals))
       setGroceryItems(sortGroceryItems(loadedGroceryList.items))
       setStatusMessage('')
-    } catch {
+    } catch (error) {
       setMeals([])
       setPlannedMeals({})
       setGroceryItems([])
-      setStatusMessage('Could not load API data. Start the API and refresh.')
+      setStatusMessage(
+        getApiErrorMessage(error, 'Could not load API data. Start the API and refresh.'),
+      )
     }
   }
 
@@ -46,8 +60,10 @@ function App() {
       setMeals((currentMeals) => [createdMeal, ...currentMeals])
       setStatusMessage('')
       return true
-    } catch {
-      setStatusMessage('Could not create meal. Check that the API is running.')
+    } catch (error) {
+      setStatusMessage(
+        getApiErrorMessage(error, 'Could not create meal. Check that the API is running.'),
+      )
       return false
     }
   }
@@ -70,10 +86,12 @@ function App() {
       await refreshGroceryList()
       setStatusMessage('')
       return true
-    } catch {
+    } catch (error) {
       setMeals(previousMeals)
       setPlannedMeals(previousPlannedMeals)
-      setStatusMessage('Could not update meal. Check that the API is running.')
+      setStatusMessage(
+        getApiErrorMessage(error, 'Could not update meal. Check that the API is running.'),
+      )
       return false
     }
   }
@@ -90,20 +108,29 @@ function App() {
       await loadPlannerData()
       setStatusMessage('')
       return true
-    } catch {
+    } catch (error) {
       setMeals(previousMeals)
       setPlannedMeals(previousPlannedMeals)
       setGroceryItems(previousGroceryItems)
-      setStatusMessage('Could not delete meal. Check that the API is running.')
+      setStatusMessage(
+        getApiErrorMessage(error, 'Could not delete meal. Check that the API is running.'),
+      )
       return false
     }
   }
 
   async function assignMeal(day: DayOfWeek, meal: MealResponseDto) {
+    if (isWeekPlanSaving) {
+      return
+    }
+
     const existingAssignment = plannedMeals[day]
     const previousPlannedMeals = plannedMeals
     const previousGroceryItems = groceryItems
 
+    setIsWeekPlanSaving(true)
+    // Optimistic update keeps the planner feeling instant; failed requests roll
+    // back to the previous state in the catch block below.
     setPlannedMeals((currentPlan) => ({
       ...currentPlan,
       [day]: {
@@ -132,14 +159,22 @@ function App() {
       }))
       await refreshGroceryList()
       setStatusMessage('')
-    } catch {
+    } catch (error) {
       setPlannedMeals(previousPlannedMeals)
       setGroceryItems(previousGroceryItems)
-      setStatusMessage('Could not update week plan. Check that the API is running.')
+      setStatusMessage(
+        getApiErrorMessage(error, 'Could not update week plan. Check that the API is running.'),
+      )
+    } finally {
+      setIsWeekPlanSaving(false)
     }
   }
 
   async function clearMeal(day: DayOfWeek) {
+    if (isWeekPlanSaving) {
+      return
+    }
+
     const existingAssignment = plannedMeals[day]
 
     if (!existingAssignment) {
@@ -149,6 +184,9 @@ function App() {
     const previousPlannedMeals = plannedMeals
     const previousGroceryItems = groceryItems
 
+    setIsWeekPlanSaving(true)
+    // Optimistic clear mirrors the assign flow; the previous plan is restored if
+    // the backend rejects the delete.
     setPlannedMeals((currentPlan) => {
       const nextPlan = { ...currentPlan }
       delete nextPlan[day]
@@ -159,10 +197,14 @@ function App() {
       await weekPlanApi.deleteMeal(existingAssignment.plannedMealId)
       await refreshGroceryList()
       setStatusMessage('')
-    } catch {
+    } catch (error) {
       setPlannedMeals(previousPlannedMeals)
       setGroceryItems(previousGroceryItems)
-      setStatusMessage('Could not update week plan. Check that the API is running.')
+      setStatusMessage(
+        getApiErrorMessage(error, 'Could not update week plan. Check that the API is running.'),
+      )
+    } finally {
+      setIsWeekPlanSaving(false)
     }
   }
 
@@ -170,37 +212,12 @@ function App() {
     setMeals((currentMeals) =>
       currentMeals.map((meal) => (meal.id === updatedMeal.id ? updatedMeal : meal)),
     )
-    setPlannedMeals((currentPlan) => {
-      const nextPlan: PlannedMealsByDay = {}
-
-      Object.entries(currentPlan).forEach(([day, assignment]) => {
-        if (!assignment) {
-          return
-        }
-
-        nextPlan[day as DayOfWeek] =
-          assignment.meal.id === updatedMeal.id
-            ? { ...assignment, meal: updatedMeal }
-            : assignment
-      })
-
-      return nextPlan
-    })
+    setPlannedMeals((currentPlan) => updateMealInPlannedMeals(currentPlan, updatedMeal))
   }
 
   function removeMealFromState(id: number) {
     setMeals((currentMeals) => currentMeals.filter((meal) => meal.id !== id))
-    setPlannedMeals((currentPlan) => {
-      const nextPlan: PlannedMealsByDay = {}
-
-      Object.entries(currentPlan).forEach(([day, assignment]) => {
-        if (assignment && assignment.meal.id !== id) {
-          nextPlan[day as DayOfWeek] = assignment
-        }
-      })
-
-      return nextPlan
-    })
+    setPlannedMeals((currentPlan) => removeMealFromPlannedMeals(currentPlan, id))
   }
 
   async function addManualGroceryItem(name: string) {
@@ -211,19 +228,29 @@ function App() {
     }
 
     try {
+      setIsAddingGroceryItem(true)
       await groceryApi.addItem({ name: trimmedName })
       await refreshGroceryList()
       setStatusMessage('')
       return true
-    } catch {
-      setStatusMessage('Could not add grocery item. Check that the API is running.')
+    } catch (error) {
+      setStatusMessage(
+        getApiErrorMessage(error, 'Could not add grocery item. Check that the API is running.'),
+      )
       return false
+    } finally {
+      setIsAddingGroceryItem(false)
     }
   }
 
   async function toggleGroceryItem(item: GroceryItemResponseDto) {
+    if (pendingGroceryItemIds.has(item.id)) {
+      return
+    }
+
     const previousGroceryItems = groceryItems
 
+    setPendingGroceryItemIds((currentIds) => new Set(currentIds).add(item.id))
     setGroceryItems((currentItems) =>
       sortGroceryItems(
         currentItems.map((currentItem) =>
@@ -250,15 +277,28 @@ function App() {
         ),
       )
       setStatusMessage('')
-    } catch {
+    } catch (error) {
       setGroceryItems(previousGroceryItems)
-      setStatusMessage('Could not update grocery item. Check that the API is running.')
+      setStatusMessage(
+        getApiErrorMessage(error, 'Could not update grocery item. Check that the API is running.'),
+      )
+    } finally {
+      setPendingGroceryItemIds((currentIds) => {
+        const nextIds = new Set(currentIds)
+        nextIds.delete(item.id)
+        return nextIds
+      })
     }
   }
 
   async function removeGroceryItem(item: GroceryItemResponseDto) {
+    if (pendingGroceryItemIds.has(item.id)) {
+      return
+    }
+
     const previousGroceryItems = groceryItems
 
+    setPendingGroceryItemIds((currentIds) => new Set(currentIds).add(item.id))
     setGroceryItems((currentItems) =>
       currentItems.filter((currentItem) => currentItem.id !== item.id),
     )
@@ -267,9 +307,17 @@ function App() {
       await groceryApi.deleteItem(item.id)
       await refreshGroceryList()
       setStatusMessage('')
-    } catch {
+    } catch (error) {
       setGroceryItems(previousGroceryItems)
-      setStatusMessage('Could not remove grocery item. Check that the API is running.')
+      setStatusMessage(
+        getApiErrorMessage(error, 'Could not remove grocery item. Check that the API is running.'),
+      )
+    } finally {
+      setPendingGroceryItemIds((currentIds) => {
+        const nextIds = new Set(currentIds)
+        nextIds.delete(item.id)
+        return nextIds
+      })
     }
   }
 
@@ -292,6 +340,7 @@ function App() {
           plannedMeals={plannedMeals}
           onAssignMeal={assignMeal}
           onClearMeal={clearMeal}
+          isSaving={isWeekPlanSaving}
         />
       )}
       {activePage === 'meals' && (
@@ -312,47 +361,12 @@ function App() {
           onAddManualItem={addManualGroceryItem}
           onToggleItem={toggleGroceryItem}
           onRemoveItem={removeGroceryItem}
+          isAddingItem={isAddingGroceryItem}
+          pendingItemIds={pendingGroceryItemIds}
         />
       )}
     </AppShell>
   )
-}
-
-function sortGroceryItems(items: GroceryItemResponseDto[]) {
-  return [...items].sort((first, second) => {
-    if (first.isCompleted !== second.isCompleted) {
-      return first.isCompleted ? 1 : -1
-    }
-
-    return first.name.localeCompare(second.name)
-  })
-}
-
-function toPlannedMealsByDay(
-  weekPlan: WeekPlanResponseDto,
-  meals: MealResponseDto[],
-): PlannedMealsByDay {
-  const mealsById = new Map(meals.map((meal) => [meal.id, meal]))
-  const plannedMealsByDay: PlannedMealsByDay = {}
-
-  weekPlan.days.forEach((day) => {
-    if (!day.plannedMeal) {
-      return
-    }
-
-    const meal = mealsById.get(day.plannedMeal.mealId)
-    if (!meal) {
-      return
-    }
-
-    plannedMealsByDay[day.dayOfWeek] = {
-      plannedMealId: day.plannedMeal.id,
-      meal,
-      assignedFamilyMemberName: day.plannedMeal.assignedFamilyMemberName,
-    }
-  })
-
-  return plannedMealsByDay
 }
 
 export default App
