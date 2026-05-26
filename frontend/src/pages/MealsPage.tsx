@@ -16,9 +16,9 @@ const emptyForm: MealFormState = {
 
 type MealsPageProps = {
   meals: MealResponseDto[]
-  onCreateMeal: (meal: CreateMealDto) => Promise<void>
-  onUpdateMeal: (id: number, meal: UpdateMealDto) => Promise<void>
-  onDeleteMeal: (id: number) => Promise<void>
+  onCreateMeal: (meal: CreateMealDto) => Promise<boolean>
+  onUpdateMeal: (id: number, meal: UpdateMealDto) => Promise<boolean>
+  onDeleteMeal: (id: number) => Promise<boolean>
 }
 
 export function MealsPage({
@@ -86,21 +86,21 @@ export function MealsPage({
 
     setIsSaving(true)
 
-    if (editingMeal) {
-      await onUpdateMeal(editingMeal.id, mealPayload)
-    } else {
-      await onCreateMeal(mealPayload)
-    }
+    const saved = editingMeal
+      ? await onUpdateMeal(editingMeal.id, mealPayload)
+      : await onCreateMeal(mealPayload)
 
     setIsSaving(false)
 
-    closeModal()
+    if (saved) {
+      closeModal()
+    }
   }
 
   async function deleteMeal(mealId: number) {
-    await onDeleteMeal(mealId)
+    const deleted = await onDeleteMeal(mealId)
 
-    if (editingMealId === mealId) {
+    if (deleted && editingMealId === mealId) {
       closeModal()
     }
   }

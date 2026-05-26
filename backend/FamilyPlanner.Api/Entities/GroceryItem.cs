@@ -13,4 +13,5 @@ public class GroceryItem
     public string? Notes { get; set; }
     public bool IsChecked { get; set; }
     public bool IsManuallyAdded { get; set; }
+    public bool IsHidden { get; set; }
 }

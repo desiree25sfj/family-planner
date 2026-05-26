@@ -45,35 +45,74 @@ function App() {
       const createdMeal = await mealsApi.create(meal)
       setMeals((currentMeals) => [createdMeal, ...currentMeals])
       setStatusMessage('')
+      return true
     } catch {
       setStatusMessage('Could not create meal. Check that the API is running.')
+      return false
     }
   }
 
   async function updateMeal(id: number, meal: UpdateMealDto) {
+    const previousMeals = meals
+    const previousPlannedMeals = plannedMeals
+    const optimisticMeal: MealResponseDto = {
+      id,
+      name: meal.name,
+      recipeInstructions: meal.recipeInstructions ?? null,
+      ingredients: meal.ingredients,
+    }
+
+    applyMealUpdate(optimisticMeal)
+
     try {
       const updatedMeal = await mealsApi.update(id, meal)
       applyMealUpdate(updatedMeal)
       await refreshGroceryList()
       setStatusMessage('')
+      return true
     } catch {
+      setMeals(previousMeals)
+      setPlannedMeals(previousPlannedMeals)
       setStatusMessage('Could not update meal. Check that the API is running.')
+      return false
     }
   }
 
   async function deleteMeal(id: number) {
+    const previousMeals = meals
+    const previousPlannedMeals = plannedMeals
+    const previousGroceryItems = groceryItems
+
+    removeMealFromState(id)
+
     try {
       await mealsApi.delete(id)
-      removeMealFromState(id)
-      await refreshGroceryList()
+      await loadPlannerData()
       setStatusMessage('')
+      return true
     } catch {
+      setMeals(previousMeals)
+      setPlannedMeals(previousPlannedMeals)
+      setGroceryItems(previousGroceryItems)
       setStatusMessage('Could not delete meal. Check that the API is running.')
+      return false
     }
   }
 
   async function assignMeal(day: DayOfWeek, meal: MealResponseDto) {
     const existingAssignment = plannedMeals[day]
+    const previousPlannedMeals = plannedMeals
+    const previousGroceryItems = groceryItems
+
+    setPlannedMeals((currentPlan) => ({
+      ...currentPlan,
+      [day]: {
+        plannedMealId: existingAssignment?.plannedMealId ?? -Date.now(),
+        meal,
+        assignedFamilyMemberName:
+          existingAssignment?.assignedFamilyMemberName ?? null,
+      },
+    }))
 
     try {
       const savedPlannedMeal = existingAssignment
@@ -94,6 +133,8 @@ function App() {
       await refreshGroceryList()
       setStatusMessage('')
     } catch {
+      setPlannedMeals(previousPlannedMeals)
+      setGroceryItems(previousGroceryItems)
       setStatusMessage('Could not update week plan. Check that the API is running.')
     }
   }
@@ -105,16 +146,22 @@ function App() {
       return
     }
 
+    const previousPlannedMeals = plannedMeals
+    const previousGroceryItems = groceryItems
+
+    setPlannedMeals((currentPlan) => {
+      const nextPlan = { ...currentPlan }
+      delete nextPlan[day]
+      return nextPlan
+    })
+
     try {
       await weekPlanApi.deleteMeal(existingAssignment.plannedMealId)
-      setPlannedMeals((currentPlan) => {
-        const nextPlan = { ...currentPlan }
-        delete nextPlan[day]
-        return nextPlan
-      })
       await refreshGroceryList()
       setStatusMessage('')
     } catch {
+      setPlannedMeals(previousPlannedMeals)
+      setGroceryItems(previousGroceryItems)
       setStatusMessage('Could not update week plan. Check that the API is running.')
     }
   }
@@ -160,19 +207,33 @@ function App() {
     const trimmedName = name.trim()
 
     if (!trimmedName) {
-      return
+      return false
     }
 
     try {
       await groceryApi.addItem({ name: trimmedName })
       await refreshGroceryList()
       setStatusMessage('')
+      return true
     } catch {
       setStatusMessage('Could not add grocery item. Check that the API is running.')
+      return false
     }
   }
 
   async function toggleGroceryItem(item: GroceryItemResponseDto) {
+    const previousGroceryItems = groceryItems
+
+    setGroceryItems((currentItems) =>
+      sortGroceryItems(
+        currentItems.map((currentItem) =>
+          currentItem.id === item.id
+            ? { ...currentItem, isCompleted: !currentItem.isCompleted }
+            : currentItem,
+        ),
+      ),
+    )
+
     try {
       const updatedItem = await groceryApi.updateItem(item.id, {
         name: item.name,
@@ -190,18 +251,24 @@ function App() {
       )
       setStatusMessage('')
     } catch {
+      setGroceryItems(previousGroceryItems)
       setStatusMessage('Could not update grocery item. Check that the API is running.')
     }
   }
 
   async function removeGroceryItem(item: GroceryItemResponseDto) {
+    const previousGroceryItems = groceryItems
+
+    setGroceryItems((currentItems) =>
+      currentItems.filter((currentItem) => currentItem.id !== item.id),
+    )
+
     try {
       await groceryApi.deleteItem(item.id)
-      setGroceryItems((currentItems) =>
-        currentItems.filter((currentItem) => currentItem.id !== item.id),
-      )
+      await refreshGroceryList()
       setStatusMessage('')
     } catch {
+      setGroceryItems(previousGroceryItems)
       setStatusMessage('Could not remove grocery item. Check that the API is running.')
     }
   }

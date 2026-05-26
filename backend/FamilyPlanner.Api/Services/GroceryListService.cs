@@ -49,16 +49,29 @@ public class GroceryListService(FamilyPlannerDbContext dbContext)
             return null;
         }
 
-        item.Name = NormalizeRequiredText(dto.Name);
-        item.Quantity = NormalizeOptionalText(dto.Quantity);
-        item.Unit = NormalizeOptionalText(dto.Unit);
-        item.Notes = NormalizeOptionalText(dto.Notes);
+        var name = NormalizeRequiredText(dto.Name);
+        var quantity = NormalizeOptionalText(dto.Quantity);
+        var unit = NormalizeOptionalText(dto.Unit);
+        var notes = NormalizeOptionalText(dto.Notes);
+        var contentChanged =
+            !string.Equals(item.Name, name, StringComparison.Ordinal) ||
+            !string.Equals(item.Quantity, quantity, StringComparison.Ordinal) ||
+            !string.Equals(item.Unit, unit, StringComparison.Ordinal) ||
+            !string.Equals(item.Notes, notes, StringComparison.Ordinal);
+
+        item.Name = name;
+        item.Quantity = quantity;
+        item.Unit = unit;
+        item.Notes = notes;
         item.IsChecked = dto.IsCompleted;
 
         // Editing a generated line is treated as a user override. This keeps the
         // grocery list from "correcting" a human's wording on the next refresh.
-        item.IsManuallyAdded = true;
-        item.SourceMealId = null;
+        if (contentChanged)
+        {
+            item.IsManuallyAdded = true;
+            item.SourceMealId = null;
+        }
 
         await dbContext.SaveChangesAsync();
 
@@ -79,7 +92,17 @@ public class GroceryListService(FamilyPlannerDbContext dbContext)
             return false;
         }
 
-        dbContext.GroceryItems.Remove(item);
+        if (item.IsManuallyAdded)
+        {
+            dbContext.GroceryItems.Remove(item);
+        }
+        else
+        {
+            // Generated items are hidden instead of deleted so the next grocery
+            // list sync does not immediately recreate something the user removed.
+            item.IsHidden = true;
+        }
+
         await dbContext.SaveChangesAsync();
 
         return true;
@@ -175,6 +198,7 @@ public class GroceryListService(FamilyPlannerDbContext dbContext)
             WeekPlanId = weekPlan.Id,
             WeekStartDate = weekPlan.WeekStartDate,
             Items = weekPlan.GroceryItems
+                .Where(item => !item.IsHidden)
                 .OrderBy(item => item.IsChecked)
                 .ThenBy(item => item.Name)
                 .Select(ToItemResponseDto)

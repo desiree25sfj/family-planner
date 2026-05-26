@@ -76,6 +76,7 @@ public class FamilyPlannerDbContext(DbContextOptions<FamilyPlannerDbContext> opt
             entity.Property(item => item.Quantity).HasMaxLength(40);
             entity.Property(item => item.Unit).HasMaxLength(40);
             entity.Property(item => item.Notes).HasMaxLength(250);
+            entity.Property(item => item.IsHidden).HasDefaultValue(false);
 
             entity.HasOne(item => item.WeekPlan)
                 .WithMany(plan => plan.GroceryItems)

@@ -6,7 +6,7 @@ type GroceryPageProps = {
   groceryItems: GroceryItemResponseDto[]
   generatedItemCount: number
   manualItemCount: number
-  onAddManualItem: (name: string) => void | Promise<void>
+  onAddManualItem: (name: string) => boolean | Promise<boolean>
   onToggleItem: (item: GroceryItemResponseDto) => void | Promise<void>
   onRemoveItem: (item: GroceryItemResponseDto) => void | Promise<void>
 }
@@ -21,11 +21,14 @@ export function GroceryPage({
 }: GroceryPageProps) {
   const [manualItemName, setManualItemName] = useState('')
 
-  function addManualItem(event: FormEvent<HTMLFormElement>) {
+  async function addManualItem(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    onAddManualItem(manualItemName)
-    setManualItemName('')
+    const added = await onAddManualItem(manualItemName)
+
+    if (added) {
+      setManualItemName('')
+    }
   }
 
   return (
