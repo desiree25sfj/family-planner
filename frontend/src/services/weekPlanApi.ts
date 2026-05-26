@@ -1,22 +1,22 @@
 import { apiRequest } from './apiClient'
 import type {
-  CreatePlannedMealRequest,
-  PlannedMeal,
-  UpdatePlannedMealRequest,
-  WeekPlan,
+  CreatePlannedMealDto,
+  PlannedMealResponseDto,
+  UpdatePlannedMealDto,
+  WeekPlanResponseDto,
 } from '../types/weekPlan'
 
 export const weekPlanApi = {
-  getCurrent: () => apiRequest<WeekPlan>('/api/weekplans/current'),
+  getCurrent: () => apiRequest<WeekPlanResponseDto>('/api/weekplans/current'),
 
-  addMeal: (plannedMeal: CreatePlannedMealRequest) =>
-    apiRequest<PlannedMeal>('/api/weekplans/current/meals', {
+  addMeal: (plannedMeal: CreatePlannedMealDto) =>
+    apiRequest<PlannedMealResponseDto>('/api/weekplans/current/meals', {
       method: 'POST',
       body: JSON.stringify(plannedMeal),
     }),
 
-  updateMeal: (id: number, plannedMeal: UpdatePlannedMealRequest) =>
-    apiRequest<PlannedMeal>(`/api/weekplans/current/meals/${id}`, {
+  updateMeal: (id: number, plannedMeal: UpdatePlannedMealDto) =>
+    apiRequest<PlannedMealResponseDto>(`/api/weekplans/current/meals/${id}`, {
       method: 'PUT',
       body: JSON.stringify(plannedMeal),
     }),

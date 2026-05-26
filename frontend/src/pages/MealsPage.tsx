@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { PageHeader } from '../components/PageHeader'
-import type { CreateMealRequest, Meal, UpdateMealRequest } from '../types/meal'
+import type { CreateMealDto, MealResponseDto, UpdateMealDto } from '../types/meal'
 
 type MealFormState = {
   name: string
@@ -15,9 +15,9 @@ const emptyForm: MealFormState = {
 }
 
 type MealsPageProps = {
-  meals: Meal[]
-  onCreateMeal: (meal: CreateMealRequest) => Promise<void>
-  onUpdateMeal: (id: number, meal: UpdateMealRequest) => Promise<void>
+  meals: MealResponseDto[]
+  onCreateMeal: (meal: CreateMealDto) => Promise<void>
+  onUpdateMeal: (id: number, meal: UpdateMealDto) => Promise<void>
   onDeleteMeal: (id: number) => Promise<void>
 }
 
@@ -46,7 +46,7 @@ export function MealsPage({
     setIsModalOpen(true)
   }
 
-  function openEditModal(meal: Meal) {
+  function openEditModal(meal: MealResponseDto) {
     setEditingMealId(meal.id)
     setForm({
       name: meal.name,

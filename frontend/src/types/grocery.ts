@@ -1,39 +1,30 @@
-export type GroceryItem = {
+export type GroceryItemResponseDto = {
   id: number
   name: string
-  quantity?: string | null
-  unit?: string | null
-  notes?: string | null
+  quantity: string | null
+  unit: string | null
+  notes: string | null
   isCompleted: boolean
   isManuallyAdded: boolean
 }
 
-export type GroceryList = {
+export type GroceryListResponseDto = {
   weekPlanId: number
   weekStartDate: string
-  items: GroceryItem[]
+  items: GroceryItemResponseDto[]
 }
 
-export type CreateGroceryItemRequest = {
+export type CreateGroceryItemDto = {
   name: string
-  quantity?: string
-  unit?: string
-  notes?: string
+  quantity?: string | null
+  unit?: string | null
+  notes?: string | null
 }
 
-export type UpdateGroceryItemRequest = CreateGroceryItemRequest & {
-  isCompleted: boolean
-}
-
-export type GroceryChecklistItem = {
-  id: string
+export type UpdateGroceryItemDto = {
   name: string
-  source: 'generated' | 'manual'
-  isCompleted: boolean
-}
-
-export type ManualGroceryItem = {
-  id: number
-  name: string
+  quantity?: string | null
+  unit?: string | null
+  notes?: string | null
   isCompleted: boolean
 }

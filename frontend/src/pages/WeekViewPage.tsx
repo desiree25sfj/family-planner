@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { PageHeader } from '../components/PageHeader'
-import type { Meal } from '../types/meal'
+import type { MealResponseDto } from '../types/meal'
 import type { DayOfWeek, PlannedMealsByDay } from '../types/weekPlan'
 
 const weekdays: DayOfWeek[] = [
@@ -14,9 +14,9 @@ const weekdays: DayOfWeek[] = [
 ]
 
 type WeekViewPageProps = {
-  availableMeals: Meal[]
+  availableMeals: MealResponseDto[]
   plannedMeals: PlannedMealsByDay
-  onAssignMeal: (day: DayOfWeek, meal: Meal) => void
+  onAssignMeal: (day: DayOfWeek, meal: MealResponseDto) => void
   onClearMeal: (day: DayOfWeek) => void
 }
 
@@ -167,7 +167,7 @@ export function WeekViewPage({
   )
 }
 
-function getMealSummary(meal: Meal) {
+function getMealSummary(meal: MealResponseDto) {
   if (meal.ingredients.length > 0) {
     return meal.ingredients.join(', ')
   }

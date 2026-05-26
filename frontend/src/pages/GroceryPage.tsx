@@ -1,14 +1,14 @@
 import { useState, type FormEvent } from 'react'
 import { PageHeader } from '../components/PageHeader'
-import type { GroceryChecklistItem } from '../types/grocery'
+import type { GroceryItemResponseDto } from '../types/grocery'
 
 type GroceryPageProps = {
-  groceryItems: GroceryChecklistItem[]
+  groceryItems: GroceryItemResponseDto[]
   generatedItemCount: number
   manualItemCount: number
-  onAddManualItem: (name: string) => void
-  onToggleItem: (item: GroceryChecklistItem) => void
-  onRemoveItem: (item: GroceryChecklistItem) => void
+  onAddManualItem: (name: string) => void | Promise<void>
+  onToggleItem: (item: GroceryItemResponseDto) => void | Promise<void>
+  onRemoveItem: (item: GroceryItemResponseDto) => void | Promise<void>
 }
 
 export function GroceryPage({
@@ -78,7 +78,7 @@ export function GroceryPage({
                       {item.name}
                     </p>
                     <p className="mt-1 text-xs uppercase text-slate-500">
-                      {item.source === 'generated' ? 'From meal plan' : 'Manual'}
+                      {item.isManuallyAdded ? 'Manual' : 'From meal plan'}
                     </p>
                   </div>
 

@@ -1,4 +1,4 @@
-import type { Meal } from './meal'
+import type { MealResponseDto } from './meal'
 
 export type DayOfWeek =
   | 'Monday'
@@ -9,37 +9,38 @@ export type DayOfWeek =
   | 'Saturday'
   | 'Sunday'
 
-export type PlannedMeal = {
+export type PlannedMealResponseDto = {
   id: number
   dayOfWeek: DayOfWeek
   mealId: number
   mealName: string
+  assignedFamilyMemberName: string | null
+}
+
+export type DayPlanResponseDto = {
+  dayOfWeek: DayOfWeek
+  date: string
+  plannedMeal: PlannedMealResponseDto | null
+}
+
+export type WeekPlanResponseDto = {
+  id: number
+  weekStartDate: string
+  days: DayPlanResponseDto[]
+}
+
+export type CreatePlannedMealDto = {
+  dayOfWeek: DayOfWeek
+  mealId: number
   assignedFamilyMemberName?: string | null
 }
 
-export type DayPlan = {
-  dayOfWeek: DayOfWeek
-  date: string
-  plannedMeal?: PlannedMeal | null
-}
-
-export type WeekPlan = {
-  id: number
-  weekStartDate: string
-  days: DayPlan[]
-}
-
-export type CreatePlannedMealRequest = {
-  dayOfWeek: DayOfWeek
-  mealId: number
-  assignedFamilyMemberName?: string
-}
-
-export type UpdatePlannedMealRequest = CreatePlannedMealRequest
+export type UpdatePlannedMealDto = CreatePlannedMealDto
 
 export type PlannedMealAssignment = {
   plannedMealId: number
-  meal: Meal
+  meal: MealResponseDto
+  assignedFamilyMemberName: string | null
 }
 
 export type PlannedMealsByDay = Partial<Record<DayOfWeek, PlannedMealAssignment>>
