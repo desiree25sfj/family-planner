@@ -1,136 +1,31 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { PageHeader } from '../components/PageHeader'
-import type { PlannedMealsByDay } from '../types/weekPlan'
-
-type ManualGroceryItem = {
-  id: number
-  name: string
-  isCompleted: boolean
-}
-
-type GroceryListItem = {
-  id: string
-  name: string
-  source: 'generated' | 'manual'
-  isCompleted: boolean
-}
+import type { GroceryChecklistItem } from '../types/grocery'
 
 type GroceryPageProps = {
-  plannedMeals: PlannedMealsByDay
+  groceryItems: GroceryChecklistItem[]
+  generatedItemCount: number
+  manualItemCount: number
+  onAddManualItem: (name: string) => void
+  onToggleItem: (item: GroceryChecklistItem) => void
+  onRemoveItem: (item: GroceryChecklistItem) => void
 }
 
-export function GroceryPage({ plannedMeals }: GroceryPageProps) {
-  const [manualItems, setManualItems] = useState<ManualGroceryItem[]>([])
+export function GroceryPage({
+  groceryItems,
+  generatedItemCount,
+  manualItemCount,
+  onAddManualItem,
+  onToggleItem,
+  onRemoveItem,
+}: GroceryPageProps) {
   const [manualItemName, setManualItemName] = useState('')
-  const [completedGeneratedNames, setCompletedGeneratedNames] = useState<Set<string>>(
-    () => new Set(),
-  )
-  const [removedGeneratedNames, setRemovedGeneratedNames] = useState<Set<string>>(
-    () => new Set(),
-  )
-
-  const generatedItems = useMemo(() => {
-    const ingredientsByName = new Map<string, string>()
-
-    Object.values(plannedMeals).forEach((assignment) => {
-      assignment?.meal.ingredients.forEach((ingredient) => {
-        const name = ingredient.trim()
-
-        if (!name) {
-          return
-        }
-
-        const key = normalizeName(name)
-        if (!ingredientsByName.has(key)) {
-          ingredientsByName.set(key, name)
-        }
-      })
-    })
-
-    return Array.from(ingredientsByName.entries())
-      .filter(([key]) => !removedGeneratedNames.has(key))
-      .map(([key, name]) => ({
-        id: `generated-${key}`,
-        name,
-        source: 'generated' as const,
-        isCompleted: completedGeneratedNames.has(key),
-      }))
-      .sort((first, second) => first.name.localeCompare(second.name))
-  }, [completedGeneratedNames, plannedMeals, removedGeneratedNames])
-
-  const groceryItems: GroceryListItem[] = [
-    ...generatedItems,
-    ...manualItems.map((item) => ({
-      id: `manual-${item.id}`,
-      name: item.name,
-      source: 'manual' as const,
-      isCompleted: item.isCompleted,
-    })),
-  ].sort((first, second) => {
-    if (first.isCompleted !== second.isCompleted) {
-      return first.isCompleted ? 1 : -1
-    }
-
-    return first.name.localeCompare(second.name)
-  })
 
   function addManualItem(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    const name = manualItemName.trim()
-    if (!name) {
-      return
-    }
-
-    setManualItems((currentItems) => [
-      ...currentItems,
-      {
-        id: Date.now(),
-        name,
-        isCompleted: false,
-      },
-    ])
+    onAddManualItem(manualItemName)
     setManualItemName('')
-  }
-
-  function toggleItem(item: GroceryListItem) {
-    if (item.source === 'manual') {
-      const manualId = Number(item.id.replace('manual-', ''))
-      setManualItems((currentItems) =>
-        currentItems.map((manualItem) =>
-          manualItem.id === manualId
-            ? { ...manualItem, isCompleted: !manualItem.isCompleted }
-            : manualItem,
-        ),
-      )
-      return
-    }
-
-    const key = item.id.replace('generated-', '')
-    setCompletedGeneratedNames((currentNames) => {
-      const nextNames = new Set(currentNames)
-
-      if (nextNames.has(key)) {
-        nextNames.delete(key)
-      } else {
-        nextNames.add(key)
-      }
-
-      return nextNames
-    })
-  }
-
-  function removeItem(item: GroceryListItem) {
-    if (item.source === 'manual') {
-      const manualId = Number(item.id.replace('manual-', ''))
-      setManualItems((currentItems) =>
-        currentItems.filter((manualItem) => manualItem.id !== manualId),
-      )
-      return
-    }
-
-    const key = item.id.replace('generated-', '')
-    setRemovedGeneratedNames((currentNames) => new Set(currentNames).add(key))
   }
 
   return (
@@ -146,7 +41,7 @@ export function GroceryPage({ plannedMeals }: GroceryPageProps) {
             <div>
               <h2 className="font-semibold text-ink">This week's list</h2>
               <p className="mt-1 text-sm text-slate-600">
-                {generatedItems.length} generated, {manualItems.length} manual
+                {generatedItemCount} generated, {manualItemCount} manual
               </p>
             </div>
           </div>
@@ -154,13 +49,10 @@ export function GroceryPage({ plannedMeals }: GroceryPageProps) {
           {groceryItems.length > 0 ? (
             <ul className="divide-y divide-slate-100">
               {groceryItems.map((item) => (
-                <li
-                  key={item.id}
-                  className="flex items-center gap-3 py-3"
-                >
+                <li key={item.id} className="flex items-center gap-3 py-3">
                   <button
                     type="button"
-                    onClick={() => toggleItem(item)}
+                    onClick={() => onToggleItem(item)}
                     className={[
                       'flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs font-bold transition',
                       item.isCompleted
@@ -192,7 +84,7 @@ export function GroceryPage({ plannedMeals }: GroceryPageProps) {
 
                   <button
                     type="button"
-                    onClick={() => removeItem(item)}
+                    onClick={() => onRemoveItem(item)}
                     className="min-h-9 rounded-md bg-slate-100 px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
                   >
                     Remove
@@ -236,8 +128,4 @@ export function GroceryPage({ plannedMeals }: GroceryPageProps) {
       </div>
     </section>
   )
-}
-
-function normalizeName(name: string) {
-  return name.trim().toLocaleLowerCase()
 }

@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AppShell } from './components/AppShell'
 import { GroceryPage } from './pages/GroceryPage'
 import { MealsPage } from './pages/MealsPage'
 import { WeekViewPage } from './pages/WeekViewPage'
 import { mealsApi } from './services/mealsApi'
-import { mockMeals, mockPlannedMeals } from './services/mockData'
 import { weekPlanApi } from './services/weekPlanApi'
+import type { GroceryChecklistItem, ManualGroceryItem } from './types/grocery'
 import type { CreateMealRequest, Meal, UpdateMealRequest } from './types/meal'
 import type { AppPage } from './types/navigation'
 import type { DayOfWeek, PlannedMealsByDay, WeekPlan } from './types/weekPlan'
@@ -14,7 +14,42 @@ function App() {
   const [activePage, setActivePage] = useState<AppPage>('week')
   const [meals, setMeals] = useState<Meal[]>([])
   const [plannedMeals, setPlannedMeals] = useState<PlannedMealsByDay>({})
+  const [manualGroceryItems, setManualGroceryItems] = useState<ManualGroceryItem[]>([])
+  const [completedGeneratedGroceryNames, setCompletedGeneratedGroceryNames] =
+    useState<Set<string>>(() => new Set())
+  const [removedGeneratedGroceryNames, setRemovedGeneratedGroceryNames] =
+    useState<Set<string>>(() => new Set())
   const [statusMessage, setStatusMessage] = useState('Loading planner data...')
+
+  const generatedGroceryItems = useMemo(
+    () =>
+      buildGeneratedGroceryItems(
+        plannedMeals,
+        completedGeneratedGroceryNames,
+        removedGeneratedGroceryNames,
+      ),
+    [completedGeneratedGroceryNames, plannedMeals, removedGeneratedGroceryNames],
+  )
+
+  const groceryItems = useMemo(
+    () =>
+      [
+        ...generatedGroceryItems,
+        ...manualGroceryItems.map((item) => ({
+          id: `manual-${item.id}`,
+          name: item.name,
+          source: 'manual' as const,
+          isCompleted: item.isCompleted,
+        })),
+      ].sort((first, second) => {
+        if (first.isCompleted !== second.isCompleted) {
+          return first.isCompleted ? 1 : -1
+        }
+
+        return first.name.localeCompare(second.name)
+      }),
+    [generatedGroceryItems, manualGroceryItems],
+  )
 
   useEffect(() => {
     loadPlannerData()
@@ -29,9 +64,9 @@ function App() {
       setPlannedMeals(toPlannedMealsByDay(loadedWeekPlan, loadedMeals))
       setStatusMessage('')
     } catch {
-      setMeals(mockMeals)
-      setPlannedMeals(mockPlannedMeals)
-      setStatusMessage('Using local sample data. Start the API to persist changes.')
+      setMeals([])
+      setPlannedMeals({})
+      setStatusMessage('Could not load API data. Start the API and refresh.')
     }
   }
 
@@ -158,6 +193,65 @@ function App() {
     })
   }
 
+  function addManualGroceryItem(name: string) {
+    const trimmedName = name.trim()
+
+    if (!trimmedName) {
+      return
+    }
+
+    setManualGroceryItems((currentItems) => [
+      ...currentItems,
+      {
+        id: Date.now(),
+        name: trimmedName,
+        isCompleted: false,
+      },
+    ])
+  }
+
+  function toggleGroceryItem(item: GroceryChecklistItem) {
+    if (item.source === 'manual') {
+      const manualItemId = Number(item.id.replace('manual-', ''))
+      setManualGroceryItems((currentItems) =>
+        currentItems.map((manualItem) =>
+          manualItem.id === manualItemId
+            ? { ...manualItem, isCompleted: !manualItem.isCompleted }
+            : manualItem,
+        ),
+      )
+      return
+    }
+
+    const ingredientKey = item.id.replace('generated-', '')
+    setCompletedGeneratedGroceryNames((currentNames) => {
+      const nextNames = new Set(currentNames)
+
+      if (nextNames.has(ingredientKey)) {
+        nextNames.delete(ingredientKey)
+      } else {
+        nextNames.add(ingredientKey)
+      }
+
+      return nextNames
+    })
+  }
+
+  function removeGroceryItem(item: GroceryChecklistItem) {
+    if (item.source === 'manual') {
+      const manualItemId = Number(item.id.replace('manual-', ''))
+      setManualGroceryItems((currentItems) =>
+        currentItems.filter((manualItem) => manualItem.id !== manualItemId),
+      )
+      return
+    }
+
+    const ingredientKey = item.id.replace('generated-', '')
+    setRemovedGeneratedGroceryNames((currentNames) =>
+      new Set(currentNames).add(ingredientKey),
+    )
+  }
+
   return (
     <AppShell activePage={activePage} onNavigate={setActivePage}>
       {statusMessage && (
@@ -182,9 +276,55 @@ function App() {
           onDeleteMeal={deleteMeal}
         />
       )}
-      {activePage === 'grocery' && <GroceryPage plannedMeals={plannedMeals} />}
+      {activePage === 'grocery' && (
+        <GroceryPage
+          groceryItems={groceryItems}
+          generatedItemCount={generatedGroceryItems.length}
+          manualItemCount={manualGroceryItems.length}
+          onAddManualItem={addManualGroceryItem}
+          onToggleItem={toggleGroceryItem}
+          onRemoveItem={removeGroceryItem}
+        />
+      )}
     </AppShell>
   )
+}
+
+function buildGeneratedGroceryItems(
+  plannedMeals: PlannedMealsByDay,
+  completedNames: Set<string>,
+  removedNames: Set<string>,
+): GroceryChecklistItem[] {
+  const ingredientsByName = new Map<string, string>()
+
+  Object.values(plannedMeals).forEach((assignment) => {
+    assignment?.meal.ingredients.forEach((ingredient) => {
+      const name = ingredient.trim()
+
+      if (!name) {
+        return
+      }
+
+      const key = normalizeName(name)
+      if (!ingredientsByName.has(key)) {
+        ingredientsByName.set(key, name)
+      }
+    })
+  })
+
+  return Array.from(ingredientsByName.entries())
+    .filter(([key]) => !removedNames.has(key))
+    .map(([key, name]) => ({
+      id: `generated-${key}`,
+      name,
+      source: 'generated' as const,
+      isCompleted: completedNames.has(key),
+    }))
+    .sort((first, second) => first.name.localeCompare(second.name))
+}
+
+function normalizeName(name: string) {
+  return name.trim().toLocaleLowerCase()
 }
 
 function toPlannedMealsByDay(weekPlan: WeekPlan, meals: Meal[]): PlannedMealsByDay {

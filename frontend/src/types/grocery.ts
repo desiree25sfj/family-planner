@@ -24,3 +24,16 @@ export type CreateGroceryItemRequest = {
 export type UpdateGroceryItemRequest = CreateGroceryItemRequest & {
   isCompleted: boolean
 }
+
+export type GroceryChecklistItem = {
+  id: string
+  name: string
+  source: 'generated' | 'manual'
+  isCompleted: boolean
+}
+
+export type ManualGroceryItem = {
+  id: number
+  name: string
+  isCompleted: boolean
+}
