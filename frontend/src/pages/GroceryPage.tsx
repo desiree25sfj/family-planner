@@ -38,8 +38,8 @@ export function GroceryPage({
   return (
     <section>
       <PageHeader
-        title="Grocery List"
-        description="Ingredients from planned meals are combined automatically, and you can add extra items by hand."
+        title="Groceries"
+        description="Ingredients from your weekly dinners appear here automatically. Add anything extra by hand."
       />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -121,7 +121,7 @@ export function GroceryPage({
             <div className="empty-state">
               <h2 className="font-semibold text-ink">Nothing to buy yet</h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Assign meals in Week View or add a manual item here.
+                Plan dinners on the Plan Week page, or add a one-off item here.
               </p>
             </div>
           )}
@@ -130,7 +130,7 @@ export function GroceryPage({
         <aside className="card card-pad">
           <h2 className="font-semibold text-ink">Add item</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Use this for extra household items that are not generated from dinners.
+            Use this for household items that are not part of a planned dinner.
           </p>
 
           <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={addManualItem}>

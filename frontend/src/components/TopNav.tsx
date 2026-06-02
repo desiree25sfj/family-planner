@@ -1,9 +1,9 @@
 import type { AppPage, NavItem } from '../types/navigation'
 
 const navItems: NavItem[] = [
-  { page: 'week', label: 'Week view' },
+  { page: 'week', label: 'Plan Week' },
   { page: 'meals', label: 'Meals' },
-  { page: 'grocery', label: 'Grocery List' },
+  { page: 'grocery', label: 'Groceries' },
 ]
 
 type TopNavProps = {
@@ -17,7 +17,7 @@ export function TopNav({ activePage, onNavigate }: TopNavProps) {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
         <div>
           <p className="text-xs font-semibold uppercase text-sage">Family Planner</p>
-          <p className="text-lg font-semibold text-ink">Kitchen command center</p>
+          <p className="text-lg font-semibold text-ink">Plan dinners and groceries</p>
         </div>
 
         <nav aria-label="Primary navigation" className="flex gap-2 overflow-x-auto">

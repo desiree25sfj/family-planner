@@ -37,7 +37,7 @@ export function MealsPage({
     () => meals.find((meal) => meal.id === editingMealId) ?? null,
     [editingMealId, meals],
   )
-  const modalTitle = editingMeal ? 'Edit Meal' : 'Create Meal'
+  const modalTitle = editingMeal ? 'Edit Meal' : 'Add Meal'
 
   function openCreateModal() {
     setEditingMealId(null)
@@ -110,7 +110,7 @@ export function MealsPage({
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <PageHeader
           title="Meals"
-          description="Create and manage the meals that can be assigned to the weekly plan."
+          description="Save dinners your household actually eats, then choose them in the weekly plan."
         />
 
         <button
@@ -118,7 +118,7 @@ export function MealsPage({
           onClick={openCreateModal}
           className="btn-primary"
         >
-          Create Meal
+          Add Meal
         </button>
       </div>
 
@@ -178,7 +178,7 @@ export function MealsPage({
         <div className="empty-state">
           <h2 className="font-semibold text-ink">No meals yet</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Create your first meal so the week planner has something to work with.
+            Add a dinner your household likes. It will appear as a choice in Plan Week.
           </p>
         </div>
       )}

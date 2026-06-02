@@ -39,19 +39,19 @@ export function WeekViewPage({
   return (
     <section>
       <PageHeader
-        title="Week View"
-        description="Plan dinners for the week and see the household rhythm at a glance."
+        title="Plan Week"
+        description="Pick a dinner for each day. The grocery list updates from the meals you choose."
       />
 
       <div className="card card-pad mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-ink">Current draft plan</p>
+          <p className="text-sm font-medium text-ink">This week's dinner plan</p>
           <p className="mt-1 text-sm text-slate-600">
             {plannedMealCount} of 7 dinners assigned
           </p>
           {plannedMealCount === 0 && (
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              Start by selecting a day and choosing a dinner.
+              Start by picking a day below, then choose a dinner from the list.
             </p>
           )}
         </div>
@@ -65,7 +65,7 @@ export function WeekViewPage({
           <div className="empty-state md:col-span-2 lg:hidden">
             <h2 className="font-semibold text-ink">No meals planned this week</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Choose a day, then pick a dinner from the meal list.
+              Choose a day, then pick a dinner. Your groceries will build from the plan.
             </p>
           </div>
         )}
@@ -117,9 +117,9 @@ export function WeekViewPage({
                       onClick={() => setSelectedDay(day)}
                       disabled={isSaving}
                       className={meal ? 'btn-secondary flex-1' : 'btn-primary flex-1'}
-                      aria-label={`${meal ? 'Edit' : 'Assign'} meal for ${day}`}
+                      aria-label={`${meal ? 'Change' : 'Choose'} dinner for ${day}`}
                     >
-                      {meal ? 'Edit' : 'Assign'}
+                      {meal ? 'Change' : 'Choose dinner'}
                     </button>
                     {meal && (
                       <button
@@ -143,7 +143,7 @@ export function WeekViewPage({
           <div className="border-b border-slate-200 pb-4">
             <h2 className="font-semibold text-ink">Choose dinner</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Assigning to {selectedDay}
+              Planning {selectedDay}
               {selectedMeal ? `, currently ${selectedMeal.name}` : ''}.
             </p>
           </div>
@@ -152,7 +152,7 @@ export function WeekViewPage({
             <div className="mt-4 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4">
               <h3 className="text-sm font-semibold text-ink">No meals available</h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Create a meal first, then return here to assign it to the week.
+                Add a meal on the Meals page, then return here to plan the week.
               </p>
             </div>
           ) : (
