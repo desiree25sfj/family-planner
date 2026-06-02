@@ -43,7 +43,7 @@ export function WeekViewPage({
         description="Pick a dinner for each day. The grocery list updates from the meals you choose."
       />
 
-      <div className="card card-pad mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="card card-pad mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-ink">This week's dinner plan</p>
           <p className="mt-1 text-sm text-slate-600">
@@ -56,21 +56,22 @@ export function WeekViewPage({
           )}
         </div>
         <p className="rounded-md bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700">
-          Editing {selectedDay}
+          Choosing for {selectedDay}
         </p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-        {plannedMealCount === 0 && (
-          <div className="empty-state md:col-span-2 lg:hidden">
-            <h2 className="font-semibold text-ink">No meals planned this week</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Choose a day, then pick a dinner. Your groceries will build from the plan.
-            </p>
-          </div>
-        )}
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+        <div className="space-y-3">
+          {plannedMealCount === 0 && (
+            <div className="empty-state">
+              <h2 className="font-semibold text-ink">No meals planned this week</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Choose a day, then pick a dinner. Your groceries will build from the
+                plan.
+              </p>
+            </div>
+          )}
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-7">
           {weekdays.map((day) => {
             const meal = plannedMeals[day]?.meal
             const isSelected = selectedDay === day
@@ -79,54 +80,63 @@ export function WeekViewPage({
               <article
                 key={day}
                 className={[
-                  'card flex min-h-48 flex-col p-4 transition',
+                  'card p-4 transition sm:p-5',
                   isSelected
-                    ? 'border-ink ring-2 ring-ink/10'
-                    : 'border-slate-200 hover:border-slate-300',
+                    ? 'border-ink bg-white ring-2 ring-ink/10'
+                    : 'border-slate-200 bg-white hover:border-slate-300',
                 ].join(' ')}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="eyebrow">Dinner</p>
-                    <h2 className="mt-1 font-semibold text-ink">{day}</h2>
-                  </div>
-                  {meal && (
-                    <span className="rounded-md bg-sage/15 px-2 py-1 text-xs font-medium text-slate-700">
-                      Planned
-                    </span>
-                  )}
-                </div>
-
-                <div className="mt-4 flex flex-1 flex-col justify-between gap-4">
-                  {meal ? (
-                    <div>
-                      <p className="text-base font-semibold text-ink">{meal.name}</p>
-                      <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">
-                        {getMealSummary(meal)}
-                      </p>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-lg font-semibold text-ink">{day}</h2>
+                      {isSelected && (
+                        <span className="rounded-md bg-ink px-2 py-1 text-xs font-medium text-white">
+                          Choosing now
+                        </span>
+                      )}
+                      {meal && !isSelected && (
+                        <span className="rounded-md bg-sage/15 px-2 py-1 text-xs font-medium text-slate-700">
+                          Planned
+                        </span>
+                      )}
                     </div>
-                  ) : (
-                    <p className="rounded-md border border-dashed border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-500">
-                      Nothing assigned yet.
-                    </p>
-                  )}
 
-                  <div className="flex flex-wrap gap-2">
+                    {meal ? (
+                      <div className="mt-3 rounded-md bg-slate-50 p-3">
+                        <p className="text-base font-semibold text-ink">{meal.name}</p>
+                        <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">
+                          {getMealSummary(meal)}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="mt-3 rounded-md border border-dashed border-slate-300 bg-slate-50 p-3">
+                        <p className="text-sm font-medium text-slate-700">
+                          No dinner chosen yet
+                        </p>
+                        <p className="mt-1 text-sm leading-6 text-slate-500">
+                          Choose this day, then select a meal from Available Meals.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex shrink-0 flex-col gap-2 sm:w-40">
                     <button
                       type="button"
                       onClick={() => setSelectedDay(day)}
                       disabled={isSaving}
-                      className={meal ? 'btn-secondary flex-1' : 'btn-primary flex-1'}
-                      aria-label={`${meal ? 'Change' : 'Choose'} dinner for ${day}`}
+                      className={meal ? 'btn-secondary w-full' : 'btn-primary w-full'}
+                      aria-label={`${meal ? 'Change' : 'Assign'} meal for ${day}`}
                     >
-                      {meal ? 'Change' : 'Choose dinner'}
+                      {meal ? 'Change meal' : 'Assign meal'}
                     </button>
                     {meal && (
                       <button
                         type="button"
                         onClick={() => onClearMeal(day)}
                         disabled={isSaving}
-                        className="btn-ghost flex-1"
+                        className="btn-ghost w-full"
                         aria-label={`Clear meal planned for ${day}`}
                       >
                         Clear
@@ -139,12 +149,14 @@ export function WeekViewPage({
           })}
         </div>
 
-        <aside className="card card-pad">
+        <aside className="card card-pad lg:sticky lg:top-5">
           <div className="border-b border-slate-200 pb-4">
-            <h2 className="font-semibold text-ink">Choose dinner</h2>
+            <p className="eyebrow">Available Meals</p>
+            <h2 className="mt-1 font-semibold text-ink">Choose for {selectedDay}</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Planning {selectedDay}
-              {selectedMeal ? `, currently ${selectedMeal.name}` : ''}.
+              {selectedMeal
+                ? `${selectedDay} currently has ${selectedMeal.name}.`
+                : `${selectedDay} is empty right now.`}
             </p>
           </div>
 
@@ -156,7 +168,7 @@ export function WeekViewPage({
               </p>
             </div>
           ) : (
-            <div className="mt-4 space-y-2">
+            <div className="mt-4 max-h-[38rem] space-y-2 overflow-y-auto pr-1">
               {availableMeals.map((meal) => {
                 const isAssignedToSelectedDay = selectedMeal?.id === meal.id
 
@@ -170,14 +182,14 @@ export function WeekViewPage({
                       'w-full rounded-md border p-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60',
                       isAssignedToSelectedDay
                         ? 'border-ink bg-slate-100'
-                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50',
+                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50',
                     ].join(' ')}
                     aria-label={`Assign ${meal.name} to ${selectedDay}`}
                   >
                     <span className="block text-sm font-medium text-ink">
                       {meal.name}
                     </span>
-                    <span className="mt-1 block text-sm leading-6 text-slate-600">
+                    <span className="mt-1 block line-clamp-2 text-sm leading-6 text-slate-600">
                       {getMealSummary(meal)}
                     </span>
                   </button>
@@ -193,7 +205,7 @@ export function WeekViewPage({
               disabled={isSaving}
               className="btn-ghost mt-4 w-full"
             >
-              Remove meal from {selectedDay}
+              Clear {selectedDay}
             </button>
           )}
         </aside>
