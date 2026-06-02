@@ -43,19 +43,33 @@ export function WeekViewPage({
         description="Plan dinners for the week and see the household rhythm at a glance."
       />
 
-      <div className="mb-4 flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <div className="card card-pad mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-ink">Current draft plan</p>
           <p className="mt-1 text-sm text-slate-600">
             {plannedMealCount} of 7 dinners assigned
           </p>
+          {plannedMealCount === 0 && (
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Start by selecting a day and choosing a dinner.
+            </p>
+          )}
         </div>
-        <p className="rounded-md bg-slate-100 px-3 py-2 text-sm text-slate-700">
+        <p className="rounded-md bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700">
           Editing {selectedDay}
         </p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+        {plannedMealCount === 0 && (
+          <div className="empty-state md:col-span-2 lg:hidden">
+            <h2 className="font-semibold text-ink">No meals planned this week</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Choose a day, then pick a dinner from the meal list.
+            </p>
+          </div>
+        )}
+
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-7">
           {weekdays.map((day) => {
             const meal = plannedMeals[day]?.meal
@@ -65,14 +79,17 @@ export function WeekViewPage({
               <article
                 key={day}
                 className={[
-                  'flex min-h-44 flex-col rounded-lg border bg-white p-4 shadow-sm transition',
+                  'card flex min-h-48 flex-col p-4 transition',
                   isSelected
                     ? 'border-ink ring-2 ring-ink/10'
                     : 'border-slate-200 hover:border-slate-300',
                 ].join(' ')}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <h2 className="font-semibold text-ink">{day}</h2>
+                  <div>
+                    <p className="eyebrow">Dinner</p>
+                    <h2 className="mt-1 font-semibold text-ink">{day}</h2>
+                  </div>
                   {meal && (
                     <span className="rounded-md bg-sage/15 px-2 py-1 text-xs font-medium text-slate-700">
                       Planned
@@ -83,14 +100,14 @@ export function WeekViewPage({
                 <div className="mt-4 flex flex-1 flex-col justify-between gap-4">
                   {meal ? (
                     <div>
-                      <p className="font-medium text-ink">{meal.name}</p>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                      <p className="text-base font-semibold text-ink">{meal.name}</p>
+                      <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">
                         {getMealSummary(meal)}
                       </p>
                     </div>
                   ) : (
-                    <p className="text-sm leading-6 text-slate-500">
-                      No meal planned yet.
+                    <p className="rounded-md border border-dashed border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-500">
+                      Nothing assigned yet.
                     </p>
                   )}
 
@@ -99,16 +116,18 @@ export function WeekViewPage({
                       type="button"
                       onClick={() => setSelectedDay(day)}
                       disabled={isSaving}
-                      className="min-h-10 rounded-md bg-ink px-3 text-sm font-medium text-white transition hover:bg-slate-800"
+                      className={meal ? 'btn-secondary flex-1' : 'btn-primary flex-1'}
+                      aria-label={`${meal ? 'Edit' : 'Assign'} meal for ${day}`}
                     >
-                      {meal ? 'Edit meal' : 'Assign meal'}
+                      {meal ? 'Edit' : 'Assign'}
                     </button>
                     {meal && (
                       <button
                         type="button"
                         onClick={() => onClearMeal(day)}
                         disabled={isSaving}
-                        className="min-h-10 rounded-md bg-slate-100 px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
+                        className="btn-ghost flex-1"
+                        aria-label={`Clear meal planned for ${day}`}
                       >
                         Clear
                       </button>
@@ -120,7 +139,7 @@ export function WeekViewPage({
           })}
         </div>
 
-        <aside className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <aside className="card card-pad">
           <div className="border-b border-slate-200 pb-4">
             <h2 className="font-semibold text-ink">Choose dinner</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -129,40 +148,50 @@ export function WeekViewPage({
             </p>
           </div>
 
-          <div className="mt-4 space-y-2">
-            {availableMeals.map((meal) => {
-              const isAssignedToSelectedDay = selectedMeal?.id === meal.id
+          {availableMeals.length === 0 ? (
+            <div className="mt-4 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4">
+              <h3 className="text-sm font-semibold text-ink">No meals available</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Create a meal first, then return here to assign it to the week.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-4 space-y-2">
+              {availableMeals.map((meal) => {
+                const isAssignedToSelectedDay = selectedMeal?.id === meal.id
 
-              return (
-                <button
-                  key={meal.id}
-                  type="button"
-                  onClick={() => onAssignMeal(selectedDay, meal)}
-                  disabled={isSaving}
-                  className={[
-                    'w-full rounded-md border p-3 text-left transition',
-                    isAssignedToSelectedDay
-                      ? 'border-ink bg-slate-100'
-                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50',
-                  ].join(' ')}
-                >
-                  <span className="block text-sm font-medium text-ink">
-                    {meal.name}
-                  </span>
-                  <span className="mt-1 block text-sm leading-6 text-slate-600">
-                    {getMealSummary(meal)}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
+                return (
+                  <button
+                    key={meal.id}
+                    type="button"
+                    onClick={() => onAssignMeal(selectedDay, meal)}
+                    disabled={isSaving}
+                    className={[
+                      'w-full rounded-md border p-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60',
+                      isAssignedToSelectedDay
+                        ? 'border-ink bg-slate-100'
+                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50',
+                    ].join(' ')}
+                    aria-label={`Assign ${meal.name} to ${selectedDay}`}
+                  >
+                    <span className="block text-sm font-medium text-ink">
+                      {meal.name}
+                    </span>
+                    <span className="mt-1 block text-sm leading-6 text-slate-600">
+                      {getMealSummary(meal)}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
 
           {selectedMeal && (
             <button
               type="button"
               onClick={() => onClearMeal(selectedDay)}
               disabled={isSaving}
-              className="mt-4 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              className="btn-ghost mt-4 w-full"
             >
               Remove meal from {selectedDay}
             </button>

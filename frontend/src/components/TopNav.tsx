@@ -16,9 +16,7 @@ export function TopNav({ activePage, onNavigate }: TopNavProps) {
     <header className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
         <div>
-          <p className="text-xs font-semibold uppercase text-sage">
-            Family Planner
-          </p>
+          <p className="text-xs font-semibold uppercase text-sage">Family Planner</p>
           <p className="text-lg font-semibold text-ink">Kitchen command center</p>
         </div>
 
@@ -31,8 +29,9 @@ export function TopNav({ activePage, onNavigate }: TopNavProps) {
                 key={item.page}
                 type="button"
                 onClick={() => onNavigate(item.page)}
+                aria-current={isActive ? 'page' : undefined}
                 className={[
-                  'min-h-10 whitespace-nowrap rounded-md px-4 text-sm font-medium transition',
+                  'btn whitespace-nowrap',
                   isActive
                     ? 'bg-ink text-white shadow-sm'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200',

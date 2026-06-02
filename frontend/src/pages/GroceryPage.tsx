@@ -43,7 +43,7 @@ export function GroceryPage({
       />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="card card-pad">
           <div className="mb-4 flex flex-col gap-2 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="font-semibold text-ink">This week's list</h2>
@@ -54,15 +54,23 @@ export function GroceryPage({
           </div>
 
           {groceryItems.length > 0 ? (
-            <ul className="divide-y divide-slate-100">
+            <ul className="space-y-2">
               {groceryItems.map((item) => (
-                <li key={item.id} className="flex items-center gap-3 py-3">
+                <li
+                  key={item.id}
+                  className={[
+                    'flex items-center gap-3 rounded-md border p-3 transition',
+                    item.isCompleted
+                      ? 'border-slate-100 bg-slate-50'
+                      : 'border-slate-200 bg-white',
+                  ].join(' ')}
+                >
                   <button
                     type="button"
                     onClick={() => onToggleItem(item)}
                     disabled={pendingItemIds.has(item.id)}
                     className={[
-                      'flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs font-bold transition',
+                      'flex h-6 w-6 shrink-0 items-center justify-center rounded border text-xs font-bold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60',
                       item.isCompleted
                         ? 'border-ink bg-ink text-white'
                         : 'border-slate-300 bg-white text-transparent hover:border-slate-500',
@@ -77,7 +85,7 @@ export function GroceryPage({
                   <div className="min-w-0 flex-1">
                     <p
                       className={[
-                        'font-medium',
+                        'font-medium leading-6',
                         item.isCompleted
                           ? 'text-slate-400 line-through'
                           : 'text-ink',
@@ -85,7 +93,14 @@ export function GroceryPage({
                     >
                       {item.name}
                     </p>
-                    <p className="mt-1 text-xs uppercase text-slate-500">
+                    <p
+                      className={[
+                        'mt-1 inline-flex rounded-md px-2 py-1 text-xs font-medium',
+                        item.isManuallyAdded
+                          ? 'bg-slate-100 text-slate-600'
+                          : 'bg-sage/15 text-slate-700',
+                      ].join(' ')}
+                    >
                       {item.isManuallyAdded ? 'Manual' : 'From meal plan'}
                     </p>
                   </div>
@@ -94,7 +109,8 @@ export function GroceryPage({
                     type="button"
                     onClick={() => onRemoveItem(item)}
                     disabled={pendingItemIds.has(item.id)}
-                    className="min-h-9 rounded-md bg-slate-100 px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
+                    className="btn-secondary min-h-9 px-3"
+                    aria-label={`Remove ${item.name}`}
                   >
                     Remove
                   </button>
@@ -102,7 +118,7 @@ export function GroceryPage({
               ))}
             </ul>
           ) : (
-            <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center">
+            <div className="empty-state">
               <h2 className="font-semibold text-ink">Nothing to buy yet</h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 Assign meals in Week View or add a manual item here.
@@ -111,25 +127,24 @@ export function GroceryPage({
           )}
         </div>
 
-        <aside className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <aside className="card card-pad">
           <h2 className="font-semibold text-ink">Add item</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Use this for breakfast stuff, snacks, or the thing someone remembers
-            exactly 12 seconds after you leave the house.
+            Use this for extra household items that are not generated from dinners.
           </p>
 
-          <form className="mt-4 flex gap-2" onSubmit={addManualItem}>
+          <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={addManualItem}>
             <input
               value={manualItemName}
               onChange={(event) => setManualItemName(event.target.value)}
-              className="min-h-11 min-w-0 flex-1 rounded-md border border-slate-300 px-3 text-sm text-ink outline-none transition focus:border-ink focus:ring-2 focus:ring-ink/10"
+              className="field mt-0 min-w-0 flex-1"
               placeholder="Milk"
               aria-label="Manual grocery item"
             />
             <button
               type="submit"
               disabled={isAddingItem}
-              className="min-h-11 rounded-md bg-ink px-4 text-sm font-medium text-white transition hover:bg-slate-800"
+              className="btn-primary min-h-11"
             >
               {isAddingItem ? 'Adding...' : 'Add'}
             </button>
