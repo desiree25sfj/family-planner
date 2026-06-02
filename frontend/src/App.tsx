@@ -329,7 +329,7 @@ function App() {
   return (
     <AppShell activePage={activePage} onNavigate={setActivePage}>
       {statusMessage && (
-        <div className="mb-4 rounded-lg border border-marigold/40 bg-marigold/10 px-4 py-3 text-sm text-slate-700">
+        <div className="mb-5 rounded-xl border border-marigold/35 bg-marigold/12 px-4 py-3 text-sm text-ink">
           {statusMessage}
         </div>
       )}

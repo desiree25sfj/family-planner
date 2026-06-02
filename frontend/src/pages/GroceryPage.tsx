@@ -44,10 +44,10 @@ export function GroceryPage({
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="card card-pad">
-          <div className="mb-4 flex flex-col gap-2 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mb-4 flex flex-col gap-2 border-b border-oat pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="font-semibold text-ink">This week's list</h2>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-muted">
                 {generatedItemCount} generated, {manualItemCount} manual
               </p>
             </div>
@@ -59,10 +59,10 @@ export function GroceryPage({
                 <li
                   key={item.id}
                   className={[
-                    'flex items-center gap-3 rounded-md border p-3 transition',
+                    'flex items-center gap-3 rounded-lg border p-3 transition',
                     item.isCompleted
-                      ? 'border-slate-100 bg-slate-50'
-                      : 'border-slate-200 bg-white',
+                      ? 'border-oat/60 bg-paper/55'
+                      : 'border-oat bg-linen hover:border-sage/40',
                   ].join(' ')}
                 >
                   <button
@@ -70,10 +70,10 @@ export function GroceryPage({
                     onClick={() => onToggleItem(item)}
                     disabled={pendingItemIds.has(item.id)}
                     className={[
-                      'flex h-6 w-6 shrink-0 items-center justify-center rounded border text-xs font-bold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60',
+                      'flex h-6 w-6 shrink-0 items-center justify-center rounded-md border text-xs font-bold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage disabled:cursor-not-allowed disabled:opacity-60',
                       item.isCompleted
-                        ? 'border-ink bg-ink text-white'
-                        : 'border-slate-300 bg-white text-transparent hover:border-slate-500',
+                        ? 'border-sage bg-sage text-white'
+                        : 'border-oat bg-white/80 text-transparent hover:border-sage',
                     ].join(' ')}
                     aria-label={`Mark ${item.name} ${
                       item.isCompleted ? 'incomplete' : 'complete'
@@ -87,7 +87,7 @@ export function GroceryPage({
                       className={[
                         'font-medium leading-6',
                         item.isCompleted
-                          ? 'text-slate-400 line-through'
+                          ? 'text-muted/55 line-through'
                           : 'text-ink',
                       ].join(' ')}
                     >
@@ -97,8 +97,8 @@ export function GroceryPage({
                       className={[
                         'mt-1 inline-flex rounded-md px-2 py-1 text-xs font-medium',
                         item.isManuallyAdded
-                          ? 'bg-slate-100 text-slate-600'
-                          : 'bg-sage/15 text-slate-700',
+                          ? 'bg-fjord/12 text-ink'
+                          : 'bg-sage/12 text-ink',
                       ].join(' ')}
                     >
                       {item.isManuallyAdded ? 'Manual' : 'From meal plan'}
@@ -120,7 +120,7 @@ export function GroceryPage({
           ) : (
             <div className="empty-state">
               <h2 className="font-semibold text-ink">Nothing to buy yet</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
+              <p className="mt-2 text-sm leading-6 text-muted">
                 Plan dinners on the Plan Week page, or add a one-off item here.
               </p>
             </div>
@@ -129,7 +129,7 @@ export function GroceryPage({
 
         <aside className="card card-pad">
           <h2 className="font-semibold text-ink">Add item</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-2 text-sm leading-6 text-muted">
             Use this for household items that are not part of a planned dinner.
           </p>
 

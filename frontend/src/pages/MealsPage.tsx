@@ -130,7 +130,7 @@ export function MealsPage({
           >
             <div className="flex-1">
               <h2 className="font-semibold text-ink">{meal.name}</h2>
-              <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">
+              <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted">
                 {meal.recipeInstructions || 'No recipe instructions yet.'}
               </p>
 
@@ -139,13 +139,13 @@ export function MealsPage({
                   meal.ingredients.map((ingredient) => (
                     <span
                       key={ingredient}
-                      className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700"
+                      className="rounded-md bg-sage/10 px-2 py-1 text-xs font-semibold text-ink"
                     >
                       {ingredient}
                     </span>
                   ))
                 ) : (
-                  <span className="text-sm text-slate-500">
+                  <span className="text-sm text-muted">
                     No ingredients added.
                   </span>
                 )}
@@ -177,7 +177,7 @@ export function MealsPage({
       {meals.length === 0 && (
         <div className="empty-state">
           <h2 className="font-semibold text-ink">No meals yet</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-2 text-sm leading-6 text-muted">
             Add a dinner your household likes. It will appear as a choice in Plan Week.
           </p>
         </div>
@@ -185,18 +185,18 @@ export function MealsPage({
 
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end bg-slate-950/40 px-4 py-4 sm:items-center sm:justify-center"
+          className="fixed inset-0 z-50 flex items-end bg-ink/35 px-4 py-4 backdrop-blur-sm sm:items-center sm:justify-center"
           role="dialog"
           aria-modal="true"
           aria-labelledby="meal-modal-title"
         >
-          <div className="card card-pad w-full max-w-xl shadow-xl">
+          <div className="card card-pad w-full max-w-xl shadow-[0_24px_70px_rgba(47,48,44,0.18)]">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 id="meal-modal-title" className="text-xl font-semibold text-ink">
                   {modalTitle}
                 </h2>
-                <p className="mt-1 text-sm text-slate-600">
+                <p className="mt-1 text-sm text-muted">
                   Keep cooking notes simple and add ingredients as comma-separated text.
                 </p>
               </div>
@@ -262,7 +262,7 @@ export function MealsPage({
                   className="field"
                   placeholder="Rice, beans, tomatoes"
                 />
-                <span className="mt-2 block text-xs leading-5 text-slate-500">
+                <span className="mt-2 block text-xs leading-5 text-muted">
                   Separate ingredients with commas.
                 </span>
               </label>

@@ -46,16 +46,16 @@ export function WeekViewPage({
       <div className="card card-pad mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-ink">This week's dinner plan</p>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted">
             {plannedMealCount} of 7 dinners assigned
           </p>
           {plannedMealCount === 0 && (
-            <p className="mt-2 text-sm leading-6 text-slate-500">
+            <p className="mt-2 text-sm leading-6 text-muted">
               Start by picking a day below, then choose a dinner from the list.
             </p>
           )}
         </div>
-        <p className="rounded-md bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700">
+        <p className="rounded-lg bg-sage/12 px-3 py-2 text-sm font-semibold text-ink">
           Choosing for {selectedDay}
         </p>
       </div>
@@ -65,7 +65,7 @@ export function WeekViewPage({
           {plannedMealCount === 0 && (
             <div className="empty-state">
               <h2 className="font-semibold text-ink">No meals planned this week</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
+              <p className="mt-2 text-sm leading-6 text-muted">
                 Choose a day, then pick a dinner. Your groceries will build from the
                 plan.
               </p>
@@ -82,8 +82,8 @@ export function WeekViewPage({
                 className={[
                   'card p-4 transition sm:p-5',
                   isSelected
-                    ? 'border-ink bg-white ring-2 ring-ink/10'
-                    : 'border-slate-200 bg-white hover:border-slate-300',
+                    ? 'border-sage bg-linen ring-2 ring-sage/15'
+                    : 'hover:border-sage/45',
                 ].join(' ')}
               >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -91,30 +91,30 @@ export function WeekViewPage({
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="text-lg font-semibold text-ink">{day}</h2>
                       {isSelected && (
-                        <span className="rounded-md bg-ink px-2 py-1 text-xs font-medium text-white">
+                        <span className="rounded-md bg-sage px-2 py-1 text-xs font-semibold text-white">
                           Choosing now
                         </span>
                       )}
                       {meal && !isSelected && (
-                        <span className="rounded-md bg-sage/15 px-2 py-1 text-xs font-medium text-slate-700">
+                        <span className="rounded-md bg-sage/12 px-2 py-1 text-xs font-semibold text-ink">
                           Planned
                         </span>
                       )}
                     </div>
 
                     {meal ? (
-                      <div className="mt-3 rounded-md bg-slate-50 p-3">
+                      <div className="mt-3 rounded-lg bg-paper/70 p-3">
                         <p className="text-base font-semibold text-ink">{meal.name}</p>
-                        <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">
+                        <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted">
                           {getMealSummary(meal)}
                         </p>
                       </div>
                     ) : (
-                      <div className="mt-3 rounded-md border border-dashed border-slate-300 bg-slate-50 p-3">
-                        <p className="text-sm font-medium text-slate-700">
+                      <div className="mt-3 rounded-lg border border-dashed border-oat bg-paper/60 p-3">
+                        <p className="text-sm font-semibold text-ink">
                           No dinner chosen yet
                         </p>
-                        <p className="mt-1 text-sm leading-6 text-slate-500">
+                        <p className="mt-1 text-sm leading-6 text-muted">
                           Choose this day, then select a meal from Available Meals.
                         </p>
                       </div>
@@ -150,10 +150,10 @@ export function WeekViewPage({
         </div>
 
         <aside className="card card-pad lg:sticky lg:top-5">
-          <div className="border-b border-slate-200 pb-4">
+          <div className="border-b border-oat pb-4">
             <p className="eyebrow">Available Meals</p>
             <h2 className="mt-1 font-semibold text-ink">Choose for {selectedDay}</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
+            <p className="mt-2 text-sm leading-6 text-muted">
               {selectedMeal
                 ? `${selectedDay} currently has ${selectedMeal.name}.`
                 : `${selectedDay} is empty right now.`}
@@ -161,9 +161,9 @@ export function WeekViewPage({
           </div>
 
           {availableMeals.length === 0 ? (
-            <div className="mt-4 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4">
+            <div className="mt-4 rounded-xl border border-dashed border-oat bg-paper/60 p-4">
               <h3 className="text-sm font-semibold text-ink">No meals available</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
+              <p className="mt-2 text-sm leading-6 text-muted">
                 Add a meal on the Meals page, then return here to plan the week.
               </p>
             </div>
@@ -179,17 +179,17 @@ export function WeekViewPage({
                     onClick={() => onAssignMeal(selectedDay, meal)}
                     disabled={isSaving}
                     className={[
-                      'w-full rounded-md border p-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60',
+                      'w-full rounded-lg border p-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage disabled:cursor-not-allowed disabled:opacity-60',
                       isAssignedToSelectedDay
-                        ? 'border-ink bg-slate-100'
-                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50',
+                        ? 'border-sage bg-sage/10'
+                        : 'border-oat bg-linen hover:border-sage/45 hover:bg-paper/80',
                     ].join(' ')}
                     aria-label={`Assign ${meal.name} to ${selectedDay}`}
                   >
                     <span className="block text-sm font-medium text-ink">
                       {meal.name}
                     </span>
-                    <span className="mt-1 block line-clamp-2 text-sm leading-6 text-slate-600">
+                    <span className="mt-1 block line-clamp-2 text-sm leading-6 text-muted">
                       {getMealSummary(meal)}
                     </span>
                   </button>
