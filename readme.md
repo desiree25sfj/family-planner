@@ -159,6 +159,11 @@ VITE_API_BASE_URL=https://family-planner-api-production.up.railway.app
 After changing this value, redeploy the Vercel frontend so Vite bakes the API
 URL into the production bundle.
 
+If the frontend says it cannot load API data in production, check this first.
+For a Vite app, `VITE_API_BASE_URL` is read during the Vercel build, so changing
+the value requires a new frontend deployment. Do not leave this variable blank,
+and do not set it to the Vercel frontend URL.
+
 ### Railway Backend
 
 Set this environment variable in Railway:
