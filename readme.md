@@ -138,6 +138,10 @@ where the other one lives.
 
 ### Vercel Frontend
 
+This repository stores the Vite app in `frontend/`. The root `vercel.json`
+builds that folder and serves `frontend/dist`, so Vercel can deploy the project
+from the repository root.
+
 Set this environment variable in Vercel:
 
 ```bash
