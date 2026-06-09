@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { PageHeader } from '../components/PageHeader'
 import type { MealResponseDto } from '../types/meal'
 import type { DayOfWeek, PlannedMealsByDay } from '../types/weekPlan'
@@ -36,6 +36,23 @@ export function WeekViewPage({
     [plannedMeals],
   )
 
+  function selectDay(day: DayOfWeek) {
+    if (!isSaving) {
+      setSelectedDay(day)
+    }
+  }
+
+  function handleDayCardKeyDown(event: KeyboardEvent<HTMLElement>, day: DayOfWeek) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      selectDay(day)
+    }
+  }
+
+  function stopCardClick(event: MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation()
+  }
+
   return (
     <section>
       <PageHeader
@@ -55,7 +72,7 @@ export function WeekViewPage({
             </p>
           )}
         </div>
-        <p className="rounded-lg bg-sage/12 px-3 py-2 text-sm font-semibold text-ink">
+        <p className="rounded-lg bg-sage/10 px-3 py-2 text-sm font-semibold text-ink">
           Choosing for {selectedDay}
         </p>
       </div>
@@ -79,11 +96,15 @@ export function WeekViewPage({
             return (
               <article
                 key={day}
+                role="button"
+                tabIndex={0}
+                onClick={() => selectDay(day)}
+                onKeyDown={(event) => handleDayCardKeyDown(event, day)}
                 className={[
-                  'card p-4 transition sm:p-5',
+                  'card cursor-pointer p-4 transition duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage sm:p-5',
                   isSelected
                     ? 'border-sage bg-linen ring-2 ring-sage/15'
-                    : 'hover:border-sage/45',
+                    : 'hover:-translate-y-0.5 hover:border-sage/40 hover:shadow-[0_14px_34px_rgba(47,48,44,0.08)]',
                 ].join(' ')}
               >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -96,7 +117,7 @@ export function WeekViewPage({
                         </span>
                       )}
                       {meal && !isSelected && (
-                        <span className="rounded-md bg-sage/12 px-2 py-1 text-xs font-semibold text-ink">
+                        <span className="rounded-md bg-sage/10 px-2 py-1 text-xs font-semibold text-ink">
                           Planned
                         </span>
                       )}
@@ -124,7 +145,10 @@ export function WeekViewPage({
                   <div className="flex shrink-0 flex-col gap-2 sm:w-40">
                     <button
                       type="button"
-                      onClick={() => setSelectedDay(day)}
+                      onClick={(event) => {
+                        stopCardClick(event)
+                        selectDay(day)
+                      }}
                       disabled={isSaving}
                       className={meal ? 'btn-secondary w-full' : 'btn-primary w-full'}
                       aria-label={`${meal ? 'Change' : 'Assign'} meal for ${day}`}
@@ -134,7 +158,10 @@ export function WeekViewPage({
                     {meal && (
                       <button
                         type="button"
-                        onClick={() => onClearMeal(day)}
+                        onClick={(event) => {
+                          stopCardClick(event)
+                          onClearMeal(day)
+                        }}
                         disabled={isSaving}
                         className="btn-ghost w-full"
                         aria-label={`Clear meal planned for ${day}`}
@@ -182,7 +209,7 @@ export function WeekViewPage({
                       'w-full rounded-lg border p-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage disabled:cursor-not-allowed disabled:opacity-60',
                       isAssignedToSelectedDay
                         ? 'border-sage bg-sage/10'
-                        : 'border-oat bg-linen hover:border-sage/45 hover:bg-paper/80',
+                        : 'border-oat bg-linen hover:border-sage/40 hover:bg-paper/80',
                     ].join(' ')}
                     aria-label={`Assign ${meal.name} to ${selectedDay}`}
                   >

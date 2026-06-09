@@ -291,6 +291,58 @@ function App() {
     }
   }
 
+  async function adjustGroceryItemQuantity(
+    item: GroceryItemResponseDto,
+    nextQuantity: number,
+  ) {
+    if (pendingGroceryItemIds.has(item.id) || nextQuantity < 1) {
+      return
+    }
+
+    const previousGroceryItems = groceryItems
+    const nextQuantityText = nextQuantity > 1 ? nextQuantity.toString() : null
+
+    setPendingGroceryItemIds((currentIds) => new Set(currentIds).add(item.id))
+    setGroceryItems((currentItems) =>
+      sortGroceryItems(
+        currentItems.map((currentItem) =>
+          currentItem.id === item.id
+            ? { ...currentItem, quantity: nextQuantityText }
+            : currentItem,
+        ),
+      ),
+    )
+
+    try {
+      const updatedItem = await groceryApi.updateItem(item.id, {
+        name: item.name,
+        quantity: nextQuantityText,
+        unit: item.unit,
+        notes: item.notes,
+        isCompleted: item.isCompleted,
+      })
+      setGroceryItems((currentItems) =>
+        sortGroceryItems(
+          currentItems.map((currentItem) =>
+            currentItem.id === updatedItem.id ? updatedItem : currentItem,
+          ),
+        ),
+      )
+      setStatusMessage('')
+    } catch (error) {
+      setGroceryItems(previousGroceryItems)
+      setStatusMessage(
+        getApiErrorMessage(error, 'Could not update grocery quantity. Check that the API is running.'),
+      )
+    } finally {
+      setPendingGroceryItemIds((currentIds) => {
+        const nextIds = new Set(currentIds)
+        nextIds.delete(item.id)
+        return nextIds
+      })
+    }
+  }
+
   async function removeGroceryItem(item: GroceryItemResponseDto) {
     if (pendingGroceryItemIds.has(item.id)) {
       return
@@ -329,7 +381,7 @@ function App() {
   return (
     <AppShell activePage={activePage} onNavigate={setActivePage}>
       {statusMessage && (
-        <div className="mb-5 rounded-xl border border-marigold/35 bg-marigold/12 px-4 py-3 text-sm text-ink">
+        <div className="mb-5 rounded-xl border border-marigold/30 bg-marigold/10 px-4 py-3 text-sm text-ink">
           {statusMessage}
         </div>
       )}
@@ -360,6 +412,7 @@ function App() {
           manualItemCount={groceryItems.filter((item) => item.isManuallyAdded).length}
           onAddManualItem={addManualGroceryItem}
           onToggleItem={toggleGroceryItem}
+          onAdjustItemQuantity={adjustGroceryItemQuantity}
           onRemoveItem={removeGroceryItem}
           isAddingItem={isAddingGroceryItem}
           pendingItemIds={pendingGroceryItemIds}

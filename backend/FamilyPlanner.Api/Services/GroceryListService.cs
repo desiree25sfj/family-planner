@@ -121,7 +121,7 @@ public class GroceryListService(FamilyPlannerDbContext dbContext)
             .GroupBy(ingredient => ingredient.Name, StringComparer.OrdinalIgnoreCase)
             .Select(group => new GeneratedIngredient(
                 group.First().Name,
-                CombineDistinctText(group.Select(ingredient => ingredient.Quantity)),
+                CombineQuantityText(group.Select(ingredient => ingredient.Quantity), group.Count()),
                 CombineDistinctText(group.Select(ingredient => ingredient.Unit)),
                 group.First().SourceMealId))
             .ToList();
@@ -240,6 +240,21 @@ public class GroceryListService(FamilyPlannerDbContext dbContext)
             .ToList();
 
         return distinctValues.Count == 0 ? null : string.Join(", ", distinctValues);
+    }
+
+    private static string? CombineQuantityText(IEnumerable<string?> values, int ingredientCount)
+    {
+        var distinctQuantities = values
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (distinctQuantities.Count > 0)
+        {
+            return string.Join(", ", distinctQuantities);
+        }
+
+        return ingredientCount > 1 ? ingredientCount.ToString() : null;
     }
 
     private record GeneratedIngredient(string Name, string? Quantity, string? Unit, int SourceMealId);

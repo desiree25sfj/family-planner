@@ -185,7 +185,7 @@ export function MealsPage({
 
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end bg-ink/35 px-4 py-4 backdrop-blur-sm sm:items-center sm:justify-center"
+          className="fixed inset-0 z-50 flex items-end bg-ink/30 px-4 py-4 backdrop-blur-sm sm:items-center sm:justify-center"
           role="dialog"
           aria-modal="true"
           aria-labelledby="meal-modal-title"
