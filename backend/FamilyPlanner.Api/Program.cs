@@ -4,6 +4,15 @@ using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+var allowedFrontendOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>()
+    ?? ["http://localhost:5173", "http://127.0.0.1:5173"];
+allowedFrontendOrigins = allowedFrontendOrigins
+    .Where(origin => !string.IsNullOrWhiteSpace(origin))
+    .Select(origin => origin.Trim().TrimEnd('/'))
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray();
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
@@ -19,9 +28,11 @@ builder.Services.AddScoped<WeekPlanService>();
 builder.Services.AddScoped<GroceryListService>();
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("FrontendDev", policy =>
+    options.AddPolicy("FrontendClient", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
+        // Browsers only allow the Vercel app to call this API when its exact
+        // origin is listed here. Railway can provide these values through env vars.
+        policy.WithOrigins(allowedFrontendOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -53,7 +64,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("FrontendDev");
+app.UseCors("FrontendClient");
 
 app.MapGet("/", () => Results.Ok(new { app = "Family Planner API" }));
 app.MapControllers();

@@ -131,6 +131,51 @@ Open the URL displayed by Vite (typically `http://localhost:5173`).
 
 ---
 
+## Deployment Configuration
+
+The frontend and backend are deployed separately, so each side needs to know
+where the other one lives.
+
+### Vercel Frontend
+
+Set this environment variable in Vercel:
+
+```bash
+VITE_API_BASE_URL=https://your-railway-api-url
+```
+
+Use the public Railway backend URL, without a trailing slash.
+
+Example:
+
+```bash
+VITE_API_BASE_URL=https://family-planner-api-production.up.railway.app
+```
+
+After changing this value, redeploy the Vercel frontend so Vite bakes the API
+URL into the production bundle.
+
+### Railway Backend
+
+Set this environment variable in Railway:
+
+```bash
+Cors__AllowedOrigins__0=https://family-planner-roan.vercel.app
+```
+
+If you also want to allow local frontend development against the Railway API,
+add these too:
+
+```bash
+Cors__AllowedOrigins__1=http://localhost:5173
+Cors__AllowedOrigins__2=http://127.0.0.1:5173
+```
+
+CORS origins must be exact browser origins: include `https://`, do not include
+paths like `/api`, and avoid trailing slashes.
+
+---
+
 ## Project Status
 
 This project is currently in active MVP development.
