@@ -2,6 +2,10 @@ const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5123'
 ).replace(/\/+$/, '')
 
+export function getApiBaseUrl() {
+  return API_BASE_URL
+}
+
 export class ApiError extends Error {
   readonly status: number
   readonly details?: unknown
@@ -18,13 +22,24 @@ export async function apiRequest<TResponse>(
   path: string,
   options: RequestInit = {},
 ): Promise<TResponse> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  })
+  const requestUrl = `${API_BASE_URL}${path}`
+  let response: Response
+
+  try {
+    response = await fetch(requestUrl, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    })
+  } catch (error) {
+    throw new ApiError(
+      `Could not reach API at ${API_BASE_URL}. Check the Vercel API URL, Railway backend URL, and CORS settings.`,
+      0,
+      error,
+    )
+  }
 
   if (!response.ok) {
     const details = await readResponseBody(response)

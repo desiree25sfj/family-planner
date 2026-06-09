@@ -49,12 +49,17 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<FamilyPlannerDbContext>();
+    // For this SQLite MVP, applying migrations on startup keeps Railway test
+    // deployments usable without a separate database migration job.
     await dbContext.Database.MigrateAsync();
-    await DevelopmentDataSeeder.SeedAsync(dbContext);
+
+    if (app.Environment.IsDevelopment())
+    {
+        await DevelopmentDataSeeder.SeedAsync(dbContext);
+    }
 }
 
 // Configure the HTTP request pipeline.
