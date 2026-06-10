@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react'
 import { AppShell } from './components/AppShell'
 import { GroceryPage } from './pages/GroceryPage'
 import { MealsPage } from './pages/MealsPage'
+import { SignInPage } from './pages/SignInPage'
 import { WeekViewPage } from './pages/WeekViewPage'
+import { authApi } from './services/authApi'
 import { groceryApi } from './services/groceryApi'
-import { getApiErrorMessage } from './services/apiClient'
+import { ApiError, getApiErrorMessage } from './services/apiClient'
 import { mealsApi } from './services/mealsApi'
 import { weekPlanApi } from './services/weekPlanApi'
+import type { AuthUser } from './types/auth'
 import type { GroceryItemResponseDto } from './types/grocery'
 import type { CreateMealDto, MealResponseDto, UpdateMealDto } from './types/meal'
 import type { AppPage } from './types/navigation'
@@ -19,6 +22,8 @@ import {
 } from './utils/weekPlanUtils'
 
 function App() {
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null)
+  const [isAuthLoading, setIsAuthLoading] = useState(true)
   const [activePage, setActivePage] = useState<AppPage>('week')
   const [meals, setMeals] = useState<MealResponseDto[]>([])
   const [plannedMeals, setPlannedMeals] = useState<PlannedMealsByDay>({})
@@ -31,8 +36,35 @@ function App() {
   )
 
   useEffect(() => {
-    loadPlannerData()
+    loadCurrentUser()
   }, [])
+
+  useEffect(() => {
+    if (currentUser) {
+      loadPlannerData()
+    }
+  }, [currentUser])
+
+  async function loadCurrentUser() {
+    try {
+      const user = await authApi.getCurrentUser()
+      setCurrentUser(user)
+      setStatusMessage('Loading planner data...')
+    } catch (error) {
+      setCurrentUser(null)
+      clearPlannerState()
+
+      if (error instanceof ApiError && error.status === 401) {
+        setStatusMessage('')
+      } else {
+        setStatusMessage(
+          getApiErrorMessage(error, 'Could not check your sign-in status.'),
+        )
+      }
+    } finally {
+      setIsAuthLoading(false)
+    }
+  }
 
   async function loadPlannerData() {
     try {
@@ -48,6 +80,13 @@ function App() {
       setMeals([])
       setPlannedMeals({})
       setGroceryItems([])
+
+      if (error instanceof ApiError && error.status === 401) {
+        setCurrentUser(null)
+        setStatusMessage('Your session expired. Sign in again to continue.')
+        return
+      }
+
       setStatusMessage(
         getApiErrorMessage(error, 'Could not load API data. Start the API and refresh.'),
       )
@@ -378,8 +417,40 @@ function App() {
     setGroceryItems(sortGroceryItems(groceryList.items))
   }
 
+  async function signOut() {
+    try {
+      await authApi.signOut()
+    } finally {
+      setCurrentUser(null)
+      clearPlannerState()
+      setStatusMessage('')
+    }
+  }
+
+  function clearPlannerState() {
+    setMeals([])
+    setPlannedMeals({})
+    setGroceryItems([])
+    setPendingGroceryItemIds(new Set())
+    setIsWeekPlanSaving(false)
+    setIsAddingGroceryItem(false)
+  }
+
+  if (isAuthLoading) {
+    return <SignInPage statusMessage="Checking your sign-in status..." />
+  }
+
+  if (!currentUser) {
+    return <SignInPage statusMessage={statusMessage || undefined} />
+  }
+
   return (
-    <AppShell activePage={activePage} onNavigate={setActivePage}>
+    <AppShell
+      activePage={activePage}
+      currentUser={currentUser}
+      onNavigate={setActivePage}
+      onSignOut={signOut}
+    >
       {statusMessage && (
         <div className="mb-5 rounded-xl border border-marigold/30 bg-marigold/10 px-4 py-3 text-sm text-ink">
           {statusMessage}

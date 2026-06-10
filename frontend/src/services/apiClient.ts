@@ -39,6 +39,7 @@ export async function apiRequest<TResponse>(
         'Content-Type': 'application/json',
         ...options.headers,
       },
+      credentials: 'include',
       ...options,
     })
   } catch (error) {

@@ -183,6 +183,38 @@ Cors__AllowedOrigins__2=http://127.0.0.1:5173
 CORS origins must be exact browser origins: include `https://`, do not include
 paths like `/api`, and avoid trailing slashes.
 
+### Google Sign-In
+
+Create an OAuth 2.0 Client ID in Google Cloud Console:
+
+- Application type: Web application
+- Authorized JavaScript origins:
+  - `http://localhost:5173`
+  - your Vercel frontend origin, for example `https://family-planner-roan.vercel.app`
+- Authorized redirect URIs:
+  - `http://localhost:5123/signin-google`
+  - your Railway backend callback, for example `https://family-planner-api-production.up.railway.app/signin-google`
+
+Set these variables on the backend environment:
+
+```bash
+Authentication__Google__ClientId=your-google-client-id
+Authentication__Google__ClientSecret=your-google-client-secret
+```
+
+For local development, store them with .NET user secrets from the API project:
+
+```bash
+cd backend/FamilyPlanner.Api
+dotnet user-secrets init
+dotnet user-secrets set "Authentication:Google:ClientId" "your-google-client-id"
+dotnet user-secrets set "Authentication:Google:ClientSecret" "your-google-client-secret"
+```
+
+The frontend does not receive Google tokens or client secrets. It redirects to
+the backend login endpoint, and the backend stores the authenticated session in
+an HTTP-only cookie.
+
 ---
 
 ## Project Status
