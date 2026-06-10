@@ -14,15 +14,17 @@ type TopNavProps = {
 export function TopNav({ activePage, onNavigate }: TopNavProps) {
   return (
     <header className="border-b border-oat/80 bg-linen/90 backdrop-blur-sm">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-5 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-        <div>
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-4 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
+        <div className="min-w-0">
           <p className="text-xs font-semibold uppercase text-sage">Family Planner</p>
-          <p className="text-lg font-semibold text-ink">Plan dinners and groceries</p>
+          <p className="text-base font-semibold leading-6 text-ink sm:text-lg">
+            Plan dinners and groceries
+          </p>
         </div>
 
         <nav
           aria-label="Primary navigation"
-          className="flex gap-2 overflow-x-auto rounded-xl bg-paper/70 p-1"
+          className="grid w-full grid-cols-3 gap-1 rounded-xl bg-paper/70 p-1 sm:flex sm:w-auto sm:gap-2"
         >
           {navItems.map((item) => {
             const isActive = activePage === item.page
@@ -34,7 +36,7 @@ export function TopNav({ activePage, onNavigate }: TopNavProps) {
                 onClick={() => onNavigate(item.page)}
                 aria-current={isActive ? 'page' : undefined}
                 className={[
-                  'btn min-h-9 whitespace-nowrap px-3',
+                  'btn min-h-11 min-w-0 whitespace-normal px-2 text-center text-xs leading-tight sm:whitespace-nowrap sm:px-3 sm:text-sm',
                   isActive
                     ? 'bg-sage text-white shadow-sm'
                     : 'bg-transparent text-muted hover:bg-linen hover:text-ink',

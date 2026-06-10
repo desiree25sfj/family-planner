@@ -116,7 +116,7 @@ export function MealsPage({
         <button
           type="button"
           onClick={openCreateModal}
-          className="btn-primary"
+          className="btn-primary w-full sm:w-auto"
         >
           Add Meal
         </button>
@@ -126,11 +126,11 @@ export function MealsPage({
         {meals.map((meal) => (
           <article
             key={meal.id}
-            className="card card-pad flex min-h-56 flex-col"
+            className="card card-pad flex min-h-56 min-w-0 flex-col"
           >
             <div className="flex-1">
-              <h2 className="font-semibold text-ink">{meal.name}</h2>
-              <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted">
+              <h2 className="break-words font-semibold text-ink">{meal.name}</h2>
+              <p className="mt-2 line-clamp-3 break-words text-sm leading-6 text-muted">
                 {meal.recipeInstructions || 'No recipe instructions yet.'}
               </p>
 
@@ -139,7 +139,7 @@ export function MealsPage({
                   meal.ingredients.map((ingredient) => (
                     <span
                       key={ingredient}
-                      className="rounded-md bg-sage/10 px-2 py-1 text-xs font-semibold text-ink"
+                      className="max-w-full break-words rounded-md bg-sage/10 px-2 py-1 text-xs font-semibold text-ink"
                     >
                       {ingredient}
                     </span>
@@ -152,11 +152,11 @@ export function MealsPage({
               </div>
             </div>
 
-            <div className="mt-5 flex gap-2">
+            <div className="mt-5 grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => openEditModal(meal)}
-                className="btn-secondary flex-1"
+                className="btn-secondary"
                 aria-label={`Edit ${meal.name}`}
               >
                 Edit
@@ -164,7 +164,7 @@ export function MealsPage({
               <button
                 type="button"
                 onClick={() => deleteMeal(meal.id)}
-                className="btn-danger flex-1"
+                className="btn-danger"
                 aria-label={`Delete ${meal.name}`}
               >
                 Delete
@@ -185,14 +185,14 @@ export function MealsPage({
 
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end bg-ink/30 px-4 py-4 backdrop-blur-sm sm:items-center sm:justify-center"
+          className="fixed inset-0 z-50 flex items-end bg-ink/30 px-3 py-3 backdrop-blur-sm sm:items-center sm:justify-center sm:px-4 sm:py-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="meal-modal-title"
         >
-          <div className="card card-pad w-full max-w-xl shadow-[0_24px_70px_rgba(47,48,44,0.18)]">
-            <div className="flex items-start justify-between gap-4">
-              <div>
+          <div className="card card-pad max-h-[calc(100dvh-1.5rem)] w-full max-w-xl overflow-y-auto shadow-[0_24px_70px_rgba(47,48,44,0.18)] sm:max-h-[calc(100dvh-2rem)]">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+              <div className="min-w-0">
                 <h2 id="meal-modal-title" className="text-xl font-semibold text-ink">
                   {modalTitle}
                 </h2>
@@ -203,7 +203,7 @@ export function MealsPage({
               <button
                 type="button"
                 onClick={closeModal}
-                className="btn-secondary px-3"
+                className="btn-secondary w-full px-3 sm:w-auto"
                 aria-label="Close meal form"
               >
                 Close

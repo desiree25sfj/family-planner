@@ -68,7 +68,7 @@ export function GroceryPage({
                   <li
                     key={item.id}
                     className={[
-                      'flex flex-col gap-3 rounded-lg border p-3 transition sm:flex-row sm:items-center',
+                      'flex min-w-0 flex-col gap-3 rounded-lg border p-3 transition sm:flex-row sm:items-center',
                       item.isCompleted
                         ? 'border-oat/60 bg-paper/50'
                         : 'border-oat bg-linen hover:border-sage/40',
@@ -80,7 +80,7 @@ export function GroceryPage({
                         onClick={() => onToggleItem(item)}
                         disabled={isPending}
                         className={[
-                          'flex h-6 w-6 shrink-0 items-center justify-center rounded-md border text-xs font-bold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage disabled:cursor-not-allowed disabled:opacity-60',
+                          'flex h-11 w-11 shrink-0 items-center justify-center rounded-md border text-xs font-bold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage disabled:cursor-not-allowed disabled:opacity-60 sm:h-8 sm:w-8',
                           item.isCompleted
                             ? 'border-sage bg-sage text-white'
                             : 'border-oat bg-white/80 text-transparent hover:border-sage',
@@ -96,7 +96,7 @@ export function GroceryPage({
                         <div className="flex flex-wrap items-center gap-2">
                           <p
                             className={[
-                              'font-medium leading-6',
+                              'break-words font-medium leading-6',
                               item.isCompleted
                                 ? 'text-muted/50 line-through'
                                 : 'text-ink',
@@ -123,25 +123,25 @@ export function GroceryPage({
                       </div>
                     </div>
 
-                    <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
+                    <div className="flex w-full shrink-0 items-center justify-between gap-2 sm:w-auto sm:justify-start sm:self-auto">
                       <div className="flex items-center overflow-hidden rounded-lg border border-oat bg-white/70">
                         <button
                           type="button"
                           onClick={() => onAdjustItemQuantity(item, quantityCount - 1)}
                           disabled={isPending || quantityCount <= 1}
-                          className="flex h-9 w-9 items-center justify-center text-sm font-semibold text-muted transition hover:bg-paper hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+                          className="flex h-11 w-11 items-center justify-center text-sm font-semibold text-muted transition hover:bg-paper hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-9"
                           aria-label={`Decrease ${item.name} quantity`}
                         >
                           -
                         </button>
-                        <span className="min-w-10 border-x border-oat px-2 text-center text-sm font-semibold text-ink">
+                        <span className="min-w-11 border-x border-oat px-2 text-center text-sm font-semibold text-ink sm:min-w-10">
                           {quantityCount}
                         </span>
                         <button
                           type="button"
                           onClick={() => onAdjustItemQuantity(item, quantityCount + 1)}
                           disabled={isPending}
-                          className="flex h-9 w-9 items-center justify-center text-sm font-semibold text-muted transition hover:bg-paper hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+                          className="flex h-11 w-11 items-center justify-center text-sm font-semibold text-muted transition hover:bg-paper hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-9"
                           aria-label={`Increase ${item.name} quantity`}
                         >
                           +
@@ -152,7 +152,7 @@ export function GroceryPage({
                         type="button"
                         onClick={() => onRemoveItem(item)}
                         disabled={isPending}
-                        className="btn-secondary min-h-9 px-3"
+                        className="btn-secondary min-h-11 px-3"
                         aria-label={`Remove ${item.name}`}
                       >
                         Remove

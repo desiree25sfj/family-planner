@@ -18,13 +18,30 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at top left, rgba(127, 155, 135, 0.12), transparent 32rem),
     #f7f1e8;
 }
 
+#root {
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 button {
   font: inherit;
+}
+
+button,
+input,
+textarea,
+select {
+  max-width: 100%;
 }
 
 @layer components {
@@ -37,7 +54,7 @@ button {
   }
 
   .btn {
-    @apply inline-flex min-h-10 items-center justify-center rounded-lg px-4 text-sm font-semibold transition duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex min-h-11 items-center justify-center rounded-lg px-3 text-sm font-semibold transition duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage disabled:cursor-not-allowed disabled:opacity-60 sm:px-4;
   }
 
   .btn-primary {
@@ -57,7 +74,7 @@ button {
   }
 
   .field {
-    @apply mt-2 min-h-11 w-full rounded-lg border border-oat bg-white/75 px-3 text-sm text-ink outline-none transition placeholder:text-muted/50 focus:border-sage focus:bg-white focus:ring-2 focus:ring-sage/15;
+    @apply mt-2 min-h-11 w-full rounded-lg border border-oat bg-white/75 px-3 text-base text-ink outline-none transition placeholder:text-muted/50 focus:border-sage focus:bg-white focus:ring-2 focus:ring-sage/15 sm:text-sm;
   }
 
   .field-label {

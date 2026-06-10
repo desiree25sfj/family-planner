@@ -61,7 +61,7 @@ export function WeekViewPage({
       />
 
       <div className="card card-pad mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <p className="text-sm font-medium text-ink">This week's dinner plan</p>
           <p className="mt-1 text-sm text-muted">
             {plannedMealCount} of 7 dinners assigned
@@ -101,7 +101,7 @@ export function WeekViewPage({
                 onClick={() => selectDay(day)}
                 onKeyDown={(event) => handleDayCardKeyDown(event, day)}
                 className={[
-                  'card cursor-pointer p-4 transition duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage sm:p-5',
+                  'card cursor-pointer p-3 transition duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage sm:p-5',
                   isSelected
                     ? 'border-sage bg-linen ring-2 ring-sage/15'
                     : 'hover:-translate-y-0.5 hover:border-sage/40 hover:shadow-[0_14px_34px_rgba(47,48,44,0.08)]',
@@ -125,7 +125,9 @@ export function WeekViewPage({
 
                     {meal ? (
                       <div className="mt-3 rounded-lg bg-paper/70 p-3">
-                        <p className="text-base font-semibold text-ink">{meal.name}</p>
+                        <p className="break-words text-base font-semibold text-ink">
+                          {meal.name}
+                        </p>
                         <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted">
                           {getMealSummary(meal)}
                         </p>
@@ -142,7 +144,7 @@ export function WeekViewPage({
                     )}
                   </div>
 
-                  <div className="flex shrink-0 flex-col gap-2 sm:w-40">
+                  <div className="flex w-full shrink-0 flex-col gap-2 sm:w-40">
                     <button
                       type="button"
                       onClick={(event) => {
@@ -195,7 +197,7 @@ export function WeekViewPage({
               </p>
             </div>
           ) : (
-            <div className="mt-4 max-h-[38rem] space-y-2 overflow-y-auto pr-1">
+            <div className="mt-4 max-h-[60vh] space-y-2 overflow-y-auto pr-1 sm:max-h-[38rem]">
               {availableMeals.map((meal) => {
                 const isAssignedToSelectedDay = selectedMeal?.id === meal.id
 
@@ -206,14 +208,14 @@ export function WeekViewPage({
                     onClick={() => onAssignMeal(selectedDay, meal)}
                     disabled={isSaving}
                     className={[
-                      'w-full rounded-lg border p-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage disabled:cursor-not-allowed disabled:opacity-60',
+                      'min-h-11 w-full rounded-lg border p-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage disabled:cursor-not-allowed disabled:opacity-60',
                       isAssignedToSelectedDay
                         ? 'border-sage bg-sage/10'
                         : 'border-oat bg-linen hover:border-sage/40 hover:bg-paper/80',
                     ].join(' ')}
                     aria-label={`Assign ${meal.name} to ${selectedDay}`}
                   >
-                    <span className="block text-sm font-medium text-ink">
+                    <span className="block break-words text-sm font-medium text-ink">
                       {meal.name}
                     </span>
                     <span className="mt-1 block line-clamp-2 text-sm leading-6 text-muted">
