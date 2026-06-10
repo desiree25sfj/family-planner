@@ -6,30 +6,57 @@ namespace FamilyPlanner.Api.Data;
 public class FamilyPlannerDbContext(DbContextOptions<FamilyPlannerDbContext> options) : DbContext(options)
 {
     public DbSet<FamilyMember> FamilyMembers => Set<FamilyMember>();
+    public DbSet<Household> Households => Set<Household>();
     public DbSet<Meal> Meals => Set<Meal>();
     public DbSet<MealIngredient> MealIngredients => Set<MealIngredient>();
     public DbSet<WeekPlan> WeekPlans => Set<WeekPlan>();
     public DbSet<PlannedMeal> PlannedMeals => Set<PlannedMeal>();
     public DbSet<GroceryItem> GroceryItems => Set<GroceryItem>();
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // The MVP is single-household, so there is no Household table yet.
-        // If multi-household support appears later, these entities can gain a
-        // HouseholdId without changing the beginner-friendly shape of the app.
+        modelBuilder.Entity<Household>(entity =>
+        {
+            entity.Property(household => household.Name).HasMaxLength(120);
+        });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.Property(user => user.Email).HasMaxLength(254);
+            entity.Property(user => user.DisplayName).HasMaxLength(120);
+            entity.Property(user => user.AvatarUrl).HasMaxLength(1000);
+            entity.HasIndex(user => user.Email).IsUnique();
+
+            entity.HasOne(user => user.Household)
+                .WithMany(household => household.Users)
+                .HasForeignKey(user => user.HouseholdId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<FamilyMember>(entity =>
         {
             entity.Property(member => member.Name).HasMaxLength(80);
             entity.Property(member => member.ColorHex).HasMaxLength(7);
+
+            entity.HasOne(member => member.Household)
+                .WithMany(household => household.FamilyMembers)
+                .HasForeignKey(member => member.HouseholdId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Meal>(entity =>
         {
             entity.Property(meal => meal.Name).HasMaxLength(120);
             entity.Property(meal => meal.RecipeInstructions).HasMaxLength(4000);
-            entity.HasIndex(meal => meal.Name).IsUnique();
+            entity.HasIndex(meal => new { meal.HouseholdId, meal.Name }).IsUnique();
+
+            entity.HasOne(meal => meal.Household)
+                .WithMany(household => household.Meals)
+                .HasForeignKey(meal => meal.HouseholdId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<MealIngredient>(entity =>
@@ -47,8 +74,13 @@ public class FamilyPlannerDbContext(DbContextOptions<FamilyPlannerDbContext> opt
 
         modelBuilder.Entity<WeekPlan>(entity =>
         {
-            entity.HasIndex(plan => plan.WeekStartDate).IsUnique();
+            entity.HasIndex(plan => new { plan.HouseholdId, plan.WeekStartDate }).IsUnique();
             entity.Property(plan => plan.Notes).HasMaxLength(500);
+
+            entity.HasOne(plan => plan.Household)
+                .WithMany(household => household.WeekPlans)
+                .HasForeignKey(plan => plan.HouseholdId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<PlannedMeal>(entity =>

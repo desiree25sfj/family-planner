@@ -1,14 +1,13 @@
 namespace FamilyPlanner.Api.Entities;
 
-public class Meal
+public class User
 {
     public int Id { get; set; }
+    public required string Email { get; set; }
+    public required string DisplayName { get; set; }
+    public string? AvatarUrl { get; set; }
     public int HouseholdId { get; set; }
     public Household Household { get; set; } = null!;
-    public required string Name { get; set; }
-    public string? RecipeInstructions { get; set; }
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAtUtc { get; set; }
-    public List<MealIngredient> Ingredients { get; set; } = [];
-    public List<PlannedMeal> PlannedMeals { get; set; } = [];
 }

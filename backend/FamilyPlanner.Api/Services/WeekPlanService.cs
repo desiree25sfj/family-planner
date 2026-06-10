@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FamilyPlanner.Api.Services;
 
-public class WeekPlanService(FamilyPlannerDbContext dbContext)
+public class WeekPlanService(FamilyPlannerDbContext dbContext, CurrentHouseholdContext householdContext)
 {
     public async Task<WeekPlanResponseDto> GetCurrentAsync()
     {
@@ -21,7 +21,7 @@ public class WeekPlanService(FamilyPlannerDbContext dbContext)
             return PlannedMealOperationResult.Validation("DayOfWeek is not valid.");
         }
 
-        if (!await dbContext.Meals.AnyAsync(meal => meal.Id == dto.MealId))
+        if (!await MealExistsInCurrentHouseholdAsync(dto.MealId))
         {
             return PlannedMealOperationResult.Validation("MealId does not match an existing meal.");
         }
@@ -56,7 +56,7 @@ public class WeekPlanService(FamilyPlannerDbContext dbContext)
             return PlannedMealOperationResult.Validation("DayOfWeek is not valid.");
         }
 
-        if (!await dbContext.Meals.AnyAsync(meal => meal.Id == dto.MealId))
+        if (!await MealExistsInCurrentHouseholdAsync(dto.MealId))
         {
             return PlannedMealOperationResult.Validation("MealId does not match an existing meal.");
         }
@@ -65,7 +65,10 @@ public class WeekPlanService(FamilyPlannerDbContext dbContext)
         var plannedMeal = await dbContext.PlannedMeals
             .Include(meal => meal.WeekPlan)
             .Include(meal => meal.Meal)
-            .FirstOrDefaultAsync(meal => meal.Id == id && meal.WeekPlan.WeekStartDate == weekStartDate);
+            .FirstOrDefaultAsync(meal =>
+                meal.Id == id &&
+                meal.WeekPlan.HouseholdId == householdContext.HouseholdId &&
+                meal.WeekPlan.WeekStartDate == weekStartDate);
 
         if (plannedMeal is null)
         {
@@ -97,7 +100,10 @@ public class WeekPlanService(FamilyPlannerDbContext dbContext)
         var weekStartDate = WeekDateHelper.GetCurrentWeekStartDate();
         var plannedMeal = await dbContext.PlannedMeals
             .Include(meal => meal.WeekPlan)
-            .FirstOrDefaultAsync(meal => meal.Id == id && meal.WeekPlan.WeekStartDate == weekStartDate);
+            .FirstOrDefaultAsync(meal =>
+                meal.Id == id &&
+                meal.WeekPlan.HouseholdId == householdContext.HouseholdId &&
+                meal.WeekPlan.WeekStartDate == weekStartDate);
 
         if (plannedMeal is null)
         {
@@ -116,19 +122,32 @@ public class WeekPlanService(FamilyPlannerDbContext dbContext)
         var weekPlan = await dbContext.WeekPlans
             .Include(plan => plan.PlannedMeals)
             .ThenInclude(plannedMeal => plannedMeal.Meal)
-            .FirstOrDefaultAsync(plan => plan.WeekStartDate == weekStartDate);
+            .FirstOrDefaultAsync(plan =>
+                plan.HouseholdId == householdContext.HouseholdId &&
+                plan.WeekStartDate == weekStartDate);
 
         if (weekPlan is not null)
         {
             return weekPlan;
         }
 
-        weekPlan = new WeekPlan { WeekStartDate = weekStartDate };
+        weekPlan = new WeekPlan
+        {
+            HouseholdId = householdContext.HouseholdId,
+            WeekStartDate = weekStartDate
+        };
 
         dbContext.WeekPlans.Add(weekPlan);
         await dbContext.SaveChangesAsync();
 
         return weekPlan;
+    }
+
+    private async Task<bool> MealExistsInCurrentHouseholdAsync(int mealId)
+    {
+        return await dbContext.Meals.AnyAsync(meal =>
+            meal.Id == mealId &&
+            meal.HouseholdId == householdContext.HouseholdId);
     }
 
     private static WeekPlanResponseDto ToResponseDto(WeekPlan weekPlan)

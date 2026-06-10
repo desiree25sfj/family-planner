@@ -1,25 +1,33 @@
 using FamilyPlanner.Api.Common;
 using FamilyPlanner.Api.Entities;
+using FamilyPlanner.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace FamilyPlanner.Api.Data;
 
 public static class DevelopmentDataSeeder
 {
+    private const int DefaultHouseholdId = CurrentHouseholdContext.DefaultHouseholdId;
+    private const string DefaultHouseholdName = "Default Household";
+    private const string DefaultUserEmail = "demo@familyplanner.local";
+    private const string DefaultUserDisplayName = "Demo User";
     private const string StarterWeekPlanNotes = "Starter week plan for first-user testing.";
 
     public static async Task SeedAsync(FamilyPlannerDbContext dbContext)
     {
-        if (!await dbContext.FamilyMembers.AnyAsync())
+        await EnsureDefaultHouseholdAsync(dbContext);
+
+        if (!await dbContext.FamilyMembers.AnyAsync(member => member.HouseholdId == DefaultHouseholdId))
         {
             dbContext.FamilyMembers.AddRange(
-                new FamilyMember { Name = "Alex", ColorHex = "#2563eb", DisplayOrder = 1 },
-                new FamilyMember { Name = "Sam", ColorHex = "#16a34a", DisplayOrder = 2 },
-                new FamilyMember { Name = "Taylor", ColorHex = "#dc2626", DisplayOrder = 3 });
+                new FamilyMember { HouseholdId = DefaultHouseholdId, Name = "Alex", ColorHex = "#2563eb", DisplayOrder = 1 },
+                new FamilyMember { HouseholdId = DefaultHouseholdId, Name = "Sam", ColorHex = "#16a34a", DisplayOrder = 2 },
+                new FamilyMember { HouseholdId = DefaultHouseholdId, Name = "Taylor", ColorHex = "#dc2626", DisplayOrder = 3 });
         }
 
         var starterMeals = GetStarterMeals();
         var existingMealNames = await dbContext.Meals
+            .Where(meal => meal.HouseholdId == DefaultHouseholdId)
             .Select(meal => meal.Name)
             .ToListAsync();
         var existingMealNamesSet = existingMealNames.ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -35,12 +43,15 @@ public static class DevelopmentDataSeeder
         var currentWeekPlan = await dbContext.WeekPlans
             .Include(plan => plan.PlannedMeals)
             .Include(plan => plan.GroceryItems)
-            .FirstOrDefaultAsync(plan => plan.WeekStartDate == weekStartDate);
+            .FirstOrDefaultAsync(plan =>
+                plan.HouseholdId == DefaultHouseholdId &&
+                plan.WeekStartDate == weekStartDate);
 
         if (currentWeekPlan is null)
         {
             currentWeekPlan = new WeekPlan
             {
+                HouseholdId = DefaultHouseholdId,
                 WeekStartDate = weekStartDate,
                 Notes = StarterWeekPlanNotes
             };
@@ -65,6 +76,7 @@ public static class DevelopmentDataSeeder
             .Select(plan => plan.MealName)
             .ToList();
         var mealsByName = await dbContext.Meals
+            .Where(meal => meal.HouseholdId == DefaultHouseholdId)
             .Where(meal => starterMealNames.Contains(meal.Name))
             .ToDictionaryAsync(meal => meal.Name, StringComparer.OrdinalIgnoreCase);
         var plannedDays = weekPlan.PlannedMeals
@@ -115,12 +127,37 @@ public static class DevelopmentDataSeeder
     {
         return new Meal
         {
+            HouseholdId = DefaultHouseholdId,
             Name = starterMeal.Name,
             RecipeInstructions = starterMeal.RecipeInstructions,
             Ingredients = starterMeal.Ingredients
                 .Select(ingredient => new MealIngredient { Name = ingredient })
                 .ToList()
         };
+    }
+
+    private static async Task EnsureDefaultHouseholdAsync(FamilyPlannerDbContext dbContext)
+    {
+        if (!await dbContext.Households.AnyAsync(household => household.Id == DefaultHouseholdId))
+        {
+            dbContext.Households.Add(new Household
+            {
+                Id = DefaultHouseholdId,
+                Name = DefaultHouseholdName
+            });
+        }
+
+        if (!await dbContext.Users.AnyAsync(user => user.Email == DefaultUserEmail))
+        {
+            dbContext.Users.Add(new User
+            {
+                HouseholdId = DefaultHouseholdId,
+                Email = DefaultUserEmail,
+                DisplayName = DefaultUserDisplayName
+            });
+        }
+
+        await dbContext.SaveChangesAsync();
     }
 
     private static List<StarterMeal> GetStarterMeals()

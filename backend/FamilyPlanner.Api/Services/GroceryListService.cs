@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FamilyPlanner.Api.Services;
 
-public class GroceryListService(FamilyPlannerDbContext dbContext)
+public class GroceryListService(FamilyPlannerDbContext dbContext, CurrentHouseholdContext householdContext)
 {
     public async Task<GroceryListResponseDto> GetCurrentAsync()
     {
@@ -43,6 +43,7 @@ public class GroceryListService(FamilyPlannerDbContext dbContext)
             .Include(groceryItem => groceryItem.WeekPlan)
             .FirstOrDefaultAsync(groceryItem =>
                 groceryItem.Id == id &&
+                groceryItem.WeekPlan.HouseholdId == householdContext.HouseholdId &&
                 groceryItem.WeekPlan.WeekStartDate == weekStartDate);
 
         if (item is null)
@@ -86,6 +87,7 @@ public class GroceryListService(FamilyPlannerDbContext dbContext)
             .Include(groceryItem => groceryItem.WeekPlan)
             .FirstOrDefaultAsync(groceryItem =>
                 groceryItem.Id == id &&
+                groceryItem.WeekPlan.HouseholdId == householdContext.HouseholdId &&
                 groceryItem.WeekPlan.WeekStartDate == weekStartDate);
 
         if (item is null)
@@ -177,14 +179,20 @@ public class GroceryListService(FamilyPlannerDbContext dbContext)
             .ThenInclude(plannedMeal => plannedMeal.Meal)
             .ThenInclude(meal => meal.Ingredients)
             .Include(plan => plan.GroceryItems)
-            .FirstOrDefaultAsync(plan => plan.WeekStartDate == weekStartDate);
+            .FirstOrDefaultAsync(plan =>
+                plan.HouseholdId == householdContext.HouseholdId &&
+                plan.WeekStartDate == weekStartDate);
 
         if (weekPlan is not null)
         {
             return weekPlan;
         }
 
-        weekPlan = new WeekPlan { WeekStartDate = weekStartDate };
+        weekPlan = new WeekPlan
+        {
+            HouseholdId = householdContext.HouseholdId,
+            WeekStartDate = weekStartDate
+        };
 
         dbContext.WeekPlans.Add(weekPlan);
         await dbContext.SaveChangesAsync();

@@ -5,12 +5,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FamilyPlanner.Api.Services;
 
-public class MealService(FamilyPlannerDbContext dbContext)
+public class MealService(FamilyPlannerDbContext dbContext, CurrentHouseholdContext householdContext)
 {
     public async Task<IReadOnlyList<MealResponseDto>> GetAllAsync()
     {
         return await dbContext.Meals
             .AsNoTracking()
+            .Where(meal => meal.HouseholdId == householdContext.HouseholdId)
             .Include(meal => meal.Ingredients)
             .OrderBy(meal => meal.Name)
             .Select(meal => ToResponseDto(meal))
@@ -22,7 +23,9 @@ public class MealService(FamilyPlannerDbContext dbContext)
         var meal = await dbContext.Meals
             .AsNoTracking()
             .Include(meal => meal.Ingredients)
-            .FirstOrDefaultAsync(meal => meal.Id == id);
+            .FirstOrDefaultAsync(meal =>
+                meal.Id == id &&
+                meal.HouseholdId == householdContext.HouseholdId);
 
         return meal is null ? null : ToResponseDto(meal);
     }
@@ -38,6 +41,7 @@ public class MealService(FamilyPlannerDbContext dbContext)
 
         var meal = new Meal
         {
+            HouseholdId = householdContext.HouseholdId,
             Name = name,
             RecipeInstructions = NormalizeOptionalText(dto.RecipeInstructions),
             Ingredients = ToIngredientEntities(dto.Ingredients)
@@ -53,7 +57,9 @@ public class MealService(FamilyPlannerDbContext dbContext)
     {
         var meal = await dbContext.Meals
             .Include(meal => meal.Ingredients)
-            .FirstOrDefaultAsync(meal => meal.Id == id);
+            .FirstOrDefaultAsync(meal =>
+                meal.Id == id &&
+                meal.HouseholdId == householdContext.HouseholdId);
 
         if (meal is null)
         {
@@ -83,7 +89,9 @@ public class MealService(FamilyPlannerDbContext dbContext)
 
     public async Task<bool> DeleteAsync(int id)
     {
-        var meal = await dbContext.Meals.FindAsync(id);
+        var meal = await dbContext.Meals.FirstOrDefaultAsync(meal =>
+            meal.Id == id &&
+            meal.HouseholdId == householdContext.HouseholdId);
 
         if (meal is null)
         {
@@ -101,6 +109,7 @@ public class MealService(FamilyPlannerDbContext dbContext)
         var normalizedName = name.ToLower();
 
         return await dbContext.Meals.AnyAsync(meal =>
+            meal.HouseholdId == householdContext.HouseholdId &&
             meal.Name.ToLower() == normalizedName &&
             (!exceptMealId.HasValue || meal.Id != exceptMealId.Value));
     }

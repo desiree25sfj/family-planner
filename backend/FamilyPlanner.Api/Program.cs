@@ -26,6 +26,7 @@ builder.Services.AddDbContext<FamilyPlannerDbContext>(options =>
 builder.Services.AddScoped<MealService>();
 builder.Services.AddScoped<WeekPlanService>();
 builder.Services.AddScoped<GroceryListService>();
+builder.Services.AddScoped<CurrentHouseholdContext>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendClient", policy =>
