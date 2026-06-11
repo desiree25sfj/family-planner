@@ -41,6 +41,7 @@ public class AuthController(
         return Redirect(GetSafeReturnUrl(returnUrl));
     }
 
+    [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
     [HttpGet("me")]
     public async Task<ActionResult<AuthUserResponseDto>> GetCurrentUser()
     {

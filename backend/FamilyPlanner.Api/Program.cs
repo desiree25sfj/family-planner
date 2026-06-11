@@ -1,5 +1,6 @@
 using FamilyPlanner.Api.Data;
 using FamilyPlanner.Api.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
@@ -38,6 +39,7 @@ builder.Services.AddScoped<WeekPlanService>();
 builder.Services.AddScoped<GroceryListService>();
 builder.Services.AddScoped<CurrentHouseholdContext>();
 builder.Services.AddScoped<UserAccountService>();
+builder.Services.AddTransient<IClaimsTransformation, AppClaimsTransformation>();
 var authenticationBuilder = builder.Services
     .AddAuthentication(options =>
     {

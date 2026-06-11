@@ -51,18 +51,44 @@ public class UserAccountService(FamilyPlannerDbContext dbContext)
 
     public async Task<AuthUserResponseDto?> GetCurrentUserAsync(ClaimsPrincipal principal)
     {
-        var userIdClaim = principal.FindFirstValue(AuthClaimTypes.UserId);
-
-        if (!int.TryParse(userIdClaim, out var userId))
+        if (principal.Identity?.IsAuthenticated != true)
         {
             return null;
         }
 
-        var user = await dbContext.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(existingUser => existingUser.Id == userId);
+        var userIdClaim = principal.FindFirstValue(AuthClaimTypes.UserId);
 
-        return user is null ? null : ToResponseDto(user);
+        if (int.TryParse(userIdClaim, out var userId))
+        {
+            var userById = await dbContext.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(existingUser => existingUser.Id == userId);
+
+            if (userById is not null)
+            {
+                return ToResponseDto(userById);
+            }
+        }
+
+        var email = principal.FindFirstValue(ClaimTypes.Email);
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return null;
+        }
+
+        var userByEmail = await FindByEmailAsync(email);
+
+        return userByEmail is null ? null : ToResponseDto(userByEmail);
+    }
+
+    public async Task<User?> FindByEmailAsync(string email)
+    {
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+
+        return await dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(existingUser => existingUser.Email == normalizedEmail);
     }
 
     public static AuthUserResponseDto ToResponseDto(User user)
