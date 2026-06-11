@@ -40,7 +40,15 @@ public class UserAccountService(FamilyPlannerDbContext dbContext)
             Email = normalizedEmail,
             DisplayName = normalizedDisplayName,
             AvatarUrl = normalizedAvatarUrl,
-            Household = household
+            Household = household,
+            HouseholdMemberships =
+            [
+                new HouseholdMember
+                {
+                    Household = household,
+                    Role = HouseholdRole.Owner
+                }
+            ]
         };
 
         dbContext.Users.Add(user);
@@ -89,6 +97,13 @@ public class UserAccountService(FamilyPlannerDbContext dbContext)
         return await dbContext.Users
             .AsNoTracking()
             .FirstOrDefaultAsync(existingUser => existingUser.Email == normalizedEmail);
+    }
+
+    public async Task<User?> FindByIdAsync(int id)
+    {
+        return await dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(existingUser => existingUser.Id == id);
     }
 
     public static AuthUserResponseDto ToResponseDto(User user)

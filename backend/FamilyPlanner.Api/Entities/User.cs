@@ -10,4 +10,7 @@ public class User
     public Household Household { get; set; } = null!;
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAtUtc { get; set; }
+    public List<HouseholdMember> HouseholdMemberships { get; set; } = [];
+    public List<HouseholdInvitation> CreatedInvitations { get; set; } = [];
+    public List<HouseholdInvitation> UsedInvitations { get; set; } = [];
 }

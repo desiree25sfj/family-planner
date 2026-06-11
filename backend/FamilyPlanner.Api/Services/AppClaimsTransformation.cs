@@ -8,35 +8,57 @@ public class AppClaimsTransformation(UserAccountService userAccountService) : IC
     public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
     {
         if (principal.Identity?.IsAuthenticated != true ||
-            principal.HasClaim(claim => claim.Type == AuthClaimTypes.UserId) ||
             principal.Identity is not ClaimsIdentity identity)
         {
             return principal;
         }
 
-        var email = principal.FindFirstValue(ClaimTypes.Email);
-
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            return principal;
-        }
-
-        var user = await userAccountService.FindByEmailAsync(email);
+        var user = await FindUserAsync(principal);
 
         if (user is null)
         {
             return principal;
         }
 
-        identity.AddClaim(new Claim(AuthClaimTypes.UserId, user.Id.ToString()));
-        identity.AddClaim(new Claim(AuthClaimTypes.HouseholdId, user.HouseholdId.ToString()));
+        ReplaceClaim(identity, AuthClaimTypes.UserId, user.Id.ToString());
+        ReplaceClaim(identity, AuthClaimTypes.HouseholdId, user.HouseholdId.ToString());
 
-        if (!string.IsNullOrWhiteSpace(user.AvatarUrl) &&
-            !principal.HasClaim(claim => claim.Type == AuthClaimTypes.AvatarUrl))
+        if (!string.IsNullOrWhiteSpace(user.AvatarUrl))
         {
-            identity.AddClaim(new Claim(AuthClaimTypes.AvatarUrl, user.AvatarUrl));
+            ReplaceClaim(identity, AuthClaimTypes.AvatarUrl, user.AvatarUrl);
         }
 
         return principal;
+    }
+
+    private async Task<Entities.User?> FindUserAsync(ClaimsPrincipal principal)
+    {
+        var userIdClaim = principal.FindFirstValue(AuthClaimTypes.UserId);
+
+        if (int.TryParse(userIdClaim, out var userId))
+        {
+            var user = await userAccountService.FindByIdAsync(userId);
+
+            if (user is not null)
+            {
+                return user;
+            }
+        }
+
+        var email = principal.FindFirstValue(ClaimTypes.Email);
+
+        return string.IsNullOrWhiteSpace(email)
+            ? null
+            : await userAccountService.FindByEmailAsync(email);
+    }
+
+    private static void ReplaceClaim(ClaimsIdentity identity, string claimType, string value)
+    {
+        foreach (var existingClaim in identity.FindAll(claimType).ToList())
+        {
+            identity.RemoveClaim(existingClaim);
+        }
+
+        identity.AddClaim(new Claim(claimType, value));
     }
 }

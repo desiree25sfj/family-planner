@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { AppShell } from './components/AppShell'
 import { GroceryPage } from './pages/GroceryPage'
+import { HouseholdPage } from './pages/HouseholdPage'
 import { MealsPage } from './pages/MealsPage'
 import { SignInPage } from './pages/SignInPage'
 import { WeekViewPage } from './pages/WeekViewPage'
 import { authApi } from './services/authApi'
 import { groceryApi } from './services/groceryApi'
 import { ApiError, getApiErrorMessage } from './services/apiClient'
+import { householdApi } from './services/householdApi'
 import { mealsApi } from './services/mealsApi'
 import { weekPlanApi } from './services/weekPlanApi'
 import type { AuthUser } from './types/auth'
@@ -31,6 +33,7 @@ function App() {
   const [statusMessage, setStatusMessage] = useState('Loading planner data...')
   const [isWeekPlanSaving, setIsWeekPlanSaving] = useState(false)
   const [isAddingGroceryItem, setIsAddingGroceryItem] = useState(false)
+  const [processedInviteToken, setProcessedInviteToken] = useState<string | null>(null)
   const [pendingGroceryItemIds, setPendingGroceryItemIds] = useState<Set<number>>(
     () => new Set(),
   )
@@ -41,9 +44,32 @@ function App() {
 
   useEffect(() => {
     if (currentUser) {
+      acceptInviteFromUrl()
       loadPlannerData()
     }
   }, [currentUser])
+
+  async function acceptInviteFromUrl() {
+    const inviteToken = getInviteTokenFromPath()
+
+    if (!inviteToken || inviteToken === processedInviteToken) {
+      return
+    }
+
+    try {
+      setProcessedInviteToken(inviteToken)
+      await householdApi.acceptInvitation(inviteToken)
+      const user = await authApi.getCurrentUser()
+      setCurrentUser(user)
+      setActivePage('household')
+      window.history.replaceState({}, '', '/')
+      setStatusMessage('You joined the household.')
+    } catch (error) {
+      setStatusMessage(
+        getApiErrorMessage(error, 'Could not accept the household invitation.'),
+      )
+    }
+  }
 
   async function loadCurrentUser() {
     try {
@@ -441,7 +467,15 @@ function App() {
   }
 
   if (!currentUser) {
-    return <SignInPage statusMessage={statusMessage || undefined} />
+    return (
+      <SignInPage
+        statusMessage={
+          getInviteTokenFromPath()
+            ? statusMessage || 'Sign in with Google to join this household.'
+            : statusMessage || undefined
+        }
+      />
+    )
   }
 
   return (
@@ -489,8 +523,14 @@ function App() {
           pendingItemIds={pendingGroceryItemIds}
         />
       )}
+      {activePage === 'household' && <HouseholdPage />}
     </AppShell>
   )
+}
+
+function getInviteTokenFromPath() {
+  const match = window.location.pathname.match(/^\/invite\/([^/]+)$/)
+  return match ? decodeURIComponent(match[1]) : null
 }
 
 export default App

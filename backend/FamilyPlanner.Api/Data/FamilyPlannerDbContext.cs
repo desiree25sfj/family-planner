@@ -7,6 +7,8 @@ public class FamilyPlannerDbContext(DbContextOptions<FamilyPlannerDbContext> opt
 {
     public DbSet<FamilyMember> FamilyMembers => Set<FamilyMember>();
     public DbSet<Household> Households => Set<Household>();
+    public DbSet<HouseholdInvitation> HouseholdInvitations => Set<HouseholdInvitation>();
+    public DbSet<HouseholdMember> HouseholdMembers => Set<HouseholdMember>();
     public DbSet<Meal> Meals => Set<Meal>();
     public DbSet<MealIngredient> MealIngredients => Set<MealIngredient>();
     public DbSet<WeekPlan> WeekPlans => Set<WeekPlan>();
@@ -34,6 +36,44 @@ public class FamilyPlannerDbContext(DbContextOptions<FamilyPlannerDbContext> opt
                 .WithMany(household => household.Users)
                 .HasForeignKey(user => user.HouseholdId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<HouseholdMember>(entity =>
+        {
+            entity.HasIndex(member => new { member.HouseholdId, member.UserId }).IsUnique();
+            entity.HasIndex(member => member.UserId);
+
+            entity.HasOne(member => member.Household)
+                .WithMany(household => household.Members)
+                .HasForeignKey(member => member.HouseholdId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(member => member.User)
+                .WithMany(user => user.HouseholdMemberships)
+                .HasForeignKey(member => member.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<HouseholdInvitation>(entity =>
+        {
+            entity.Property(invitation => invitation.TokenHash).HasMaxLength(128);
+            entity.HasIndex(invitation => invitation.TokenHash).IsUnique();
+            entity.HasIndex(invitation => new { invitation.HouseholdId, invitation.ExpiresAtUtc });
+
+            entity.HasOne(invitation => invitation.Household)
+                .WithMany(household => household.Invitations)
+                .HasForeignKey(invitation => invitation.HouseholdId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(invitation => invitation.CreatedByUser)
+                .WithMany(user => user.CreatedInvitations)
+                .HasForeignKey(invitation => invitation.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(invitation => invitation.UsedByUser)
+                .WithMany(user => user.UsedInvitations)
+                .HasForeignKey(invitation => invitation.UsedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<FamilyMember>(entity =>

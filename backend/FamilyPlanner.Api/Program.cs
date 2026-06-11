@@ -43,6 +43,7 @@ builder.Services.AddScoped<WeekPlanService>();
 builder.Services.AddScoped<GroceryListService>();
 builder.Services.AddScoped<CurrentHouseholdContext>();
 builder.Services.AddScoped<UserAccountService>();
+builder.Services.AddScoped<HouseholdService>();
 builder.Services.AddTransient<IClaimsTransformation, AppClaimsTransformation>();
 var authenticationBuilder = builder.Services
     .AddAuthentication(options =>

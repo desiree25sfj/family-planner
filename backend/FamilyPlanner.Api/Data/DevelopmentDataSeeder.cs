@@ -153,7 +153,31 @@ public static class DevelopmentDataSeeder
             {
                 HouseholdId = DefaultHouseholdId,
                 Email = DefaultUserEmail,
-                DisplayName = DefaultUserDisplayName
+                DisplayName = DefaultUserDisplayName,
+                HouseholdMemberships =
+                [
+                    new HouseholdMember
+                    {
+                        HouseholdId = DefaultHouseholdId,
+                        Role = HouseholdRole.Owner
+                    }
+                ]
+            });
+        }
+
+        var defaultUser = await dbContext.Users
+            .FirstOrDefaultAsync(user => user.Email == DefaultUserEmail);
+
+        if (defaultUser is not null &&
+            !await dbContext.HouseholdMembers.AnyAsync(member =>
+                member.UserId == defaultUser.Id &&
+                member.HouseholdId == DefaultHouseholdId))
+        {
+            dbContext.HouseholdMembers.Add(new HouseholdMember
+            {
+                HouseholdId = DefaultHouseholdId,
+                UserId = defaultUser.Id,
+                Role = HouseholdRole.Owner
             });
         }
 

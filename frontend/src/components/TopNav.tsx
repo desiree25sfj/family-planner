@@ -5,6 +5,7 @@ const navItems: NavItem[] = [
   { page: 'week', label: 'Plan Week' },
   { page: 'meals', label: 'Meals' },
   { page: 'grocery', label: 'Groceries' },
+  { page: 'household', label: 'Household' },
 ]
 
 type TopNavProps = {
@@ -52,7 +53,7 @@ export function TopNav({ activePage, currentUser, onNavigate, onSignOut }: TopNa
 
           <nav
             aria-label="Primary navigation"
-            className="grid w-full grid-cols-3 gap-1 rounded-xl bg-paper/70 p-1 sm:flex sm:w-auto sm:gap-2"
+            className="grid w-full grid-cols-2 gap-1 rounded-xl bg-paper/70 p-1 sm:flex sm:w-auto sm:gap-2"
           >
             {navItems.map((item) => {
               const isActive = activePage === item.page

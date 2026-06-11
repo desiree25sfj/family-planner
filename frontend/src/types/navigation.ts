@@ -1,4 +1,4 @@
-export type AppPage = 'week' | 'meals' | 'grocery'
+export type AppPage = 'week' | 'meals' | 'grocery' | 'household'
 
 export type NavItem = {
   page: AppPage
