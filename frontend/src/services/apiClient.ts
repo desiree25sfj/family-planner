@@ -1,6 +1,6 @@
 const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
 const API_BASE_URL = (
-  configuredApiBaseUrl || (import.meta.env.PROD ? '' : 'http://localhost:5123')
+  import.meta.env.PROD ? '' : configuredApiBaseUrl || 'http://localhost:5123'
 ).replace(/\/+$/, '')
 
 export function getApiBaseUrl() {
@@ -23,13 +23,6 @@ export async function apiRequest<TResponse>(
   path: string,
   options: RequestInit = {},
 ): Promise<TResponse> {
-  if (!API_BASE_URL) {
-    throw new ApiError(
-      'Missing VITE_API_BASE_URL. Set it in Vercel to your Railway API URL, then redeploy the frontend.',
-      0,
-    )
-  }
-
   const requestUrl = `${API_BASE_URL}${path}`
   let response: Response
 
@@ -44,7 +37,7 @@ export async function apiRequest<TResponse>(
     })
   } catch (error) {
     throw new ApiError(
-      `Could not reach API at ${API_BASE_URL}. Check the Vercel API URL, Railway backend URL, and CORS settings.`,
+      `Could not reach API at ${API_BASE_URL || 'the current site'}. Check the API URL, backend deployment, and proxy settings.`,
       0,
       error,
     )
@@ -65,7 +58,7 @@ export async function apiRequest<TResponse>(
     return (await response.json()) as TResponse
   } catch (error) {
     throw new ApiError(
-      `API at ${API_BASE_URL} returned a non-JSON response. Check that VITE_API_BASE_URL points to the backend API, not the Vercel frontend.`,
+      `API at ${API_BASE_URL || 'the current site'} returned a non-JSON response. Check the backend API and proxy settings.`,
       response.status,
       error,
     )

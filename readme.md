@@ -133,8 +133,9 @@ Open the URL displayed by Vite (typically `http://localhost:5173`).
 
 ## Deployment Configuration
 
-The frontend and backend are deployed separately, so each side needs to know
-where the other one lives.
+The frontend and backend are deployed separately, but browser-facing API calls
+go through Vercel rewrites. This keeps the app same-origin from the browser's
+point of view, which is required for reliable cookie authentication.
 
 ### Vercel Frontend
 
@@ -142,27 +143,10 @@ This repository stores the Vite app in `frontend/`. The root `vercel.json`
 builds that folder and serves `frontend/dist`, so Vercel can deploy the project
 from the repository root.
 
-Set this environment variable in Vercel:
-
-```bash
-VITE_API_BASE_URL=https://your-railway-api-url
-```
-
-Use the public Railway backend URL, without a trailing slash.
-
-Example:
-
-```bash
-VITE_API_BASE_URL=https://family-planner-api-production.up.railway.app
-```
-
-After changing this value, redeploy the Vercel frontend so Vite bakes the API
-URL into the production bundle.
-
-If the frontend says it cannot load API data in production, check this first.
-For a Vite app, `VITE_API_BASE_URL` is read during the Vercel build, so changing
-the value requires a new frontend deployment. Do not leave this variable blank,
-and do not set it to the Vercel frontend URL.
+Do not set `VITE_API_BASE_URL` in Vercel production. Production API requests use
+relative `/api/...` URLs and are proxied by `vercel.json` to Railway. Setting
+`VITE_API_BASE_URL` to the Railway URL bypasses the proxy and can cause the auth
+cookie to be blocked as a third-party cookie.
 
 ### Railway Backend
 
@@ -193,14 +177,14 @@ Create an OAuth 2.0 Client ID in Google Cloud Console:
   - `https://family-planner-roan.vercel.app`
 - Authorized redirect URIs:
   - `http://localhost:5123/signin-google`
-  - your backend callback, for example `https://family-planner-api-production.up.railway.app/signin-google`
+  - `https://family-planner-roan.vercel.app/signin-google`
 
-Do not use the Vercel frontend URL as the Google redirect URI unless the backend
-is also served from that same origin. With the current backend-owned OAuth flow,
-Google redirects to ASP.NET Core's callback endpoint on the API host:
+In production, do not use the Railway URL as the Google redirect URI. Vercel
+proxies `/signin-google` to the backend so the browser sees the callback on the
+same origin as the frontend:
 
 ```text
-https://your-backend-url/signin-google
+https://family-planner-roan.vercel.app/signin-google
 ```
 
 Set these variables on the backend environment:
