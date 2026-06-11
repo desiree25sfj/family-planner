@@ -17,8 +17,8 @@ allowedFrontendOrigins = allowedFrontendOrigins
     .Select(origin => origin.Trim().TrimEnd('/'))
     .Distinct(StringComparer.OrdinalIgnoreCase)
     .ToArray();
-var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
-var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+var googleClientId = builder.Configuration["Authentication__Google__ClientId"];
+var googleClientSecret = builder.Configuration["Authentication__Google__ClientSecret"];
 var isGoogleAuthConfigured =
     !string.IsNullOrWhiteSpace(googleClientId) &&
     !string.IsNullOrWhiteSpace(googleClientSecret);
