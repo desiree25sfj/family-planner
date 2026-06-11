@@ -18,8 +18,8 @@ public class AuthController(
     [HttpGet("login")]
     public IActionResult Login([FromQuery] string? returnUrl = null)
     {
-        if (string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientId"]) ||
-            string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientSecret"]))
+        if (string.IsNullOrWhiteSpace(GetGoogleConfigurationValue("ClientId")) ||
+            string.IsNullOrWhiteSpace(GetGoogleConfigurationValue("ClientSecret")))
         {
             return Problem(
                 title: "Google Sign-In is not configured.",
@@ -81,5 +81,11 @@ public class AuthController(
             .Any(origin => string.Equals(origin, requestedOrigin, StringComparison.OrdinalIgnoreCase));
 
         return isAllowedOrigin ? returnUrl : fallbackOrigin;
+    }
+
+    private string? GetGoogleConfigurationValue(string key)
+    {
+        return configuration[$"Authentication:Google:{key}"] ??
+            configuration[$"Authentication__Google__{key}"];
     }
 }

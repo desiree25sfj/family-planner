@@ -17,8 +17,8 @@ allowedFrontendOrigins = allowedFrontendOrigins
     .Select(origin => origin.Trim().TrimEnd('/'))
     .Distinct(StringComparer.OrdinalIgnoreCase)
     .ToArray();
-var googleClientId = builder.Configuration["Authentication__Google__ClientId"];
-var googleClientSecret = builder.Configuration["Authentication__Google__ClientSecret"];
+var googleClientId = GetGoogleConfigurationValue("ClientId");
+var googleClientSecret = GetGoogleConfigurationValue("ClientSecret");
 var isGoogleAuthConfigured =
     !string.IsNullOrWhiteSpace(googleClientId) &&
     !string.IsNullOrWhiteSpace(googleClientSecret);
@@ -184,10 +184,19 @@ app.Use(async (context, next) =>
 app.UseAuthentication();
 app.UseAuthorization();
 
-Console.WriteLine("GOOGLE CLIENT ID: " + googleClientId);
-Console.WriteLine("GOOGLE CLIENT SECRET: " + (string.IsNullOrWhiteSpace(googleClientSecret) ? "MISSING" : "OK"));
+app.Logger.LogInformation(
+    "Google auth configured: {IsConfigured}. ClientId present: {HasClientId}. ClientSecret present: {HasClientSecret}.",
+    isGoogleAuthConfigured,
+    !string.IsNullOrWhiteSpace(googleClientId),
+    !string.IsNullOrWhiteSpace(googleClientSecret));
 
 app.MapGet("/", () => Results.Ok(new { app = "Family Planner API" }));
 app.MapControllers().RequireAuthorization(new AuthorizeAttribute());
 
 app.Run();
+
+string? GetGoogleConfigurationValue(string key)
+{
+    return builder.Configuration[$"Authentication:Google:{key}"] ??
+        builder.Configuration[$"Authentication__Google__{key}"];
+}
