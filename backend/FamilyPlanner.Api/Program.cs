@@ -184,6 +184,9 @@ app.Use(async (context, next) =>
 app.UseAuthentication();
 app.UseAuthorization();
 
+Console.WriteLine("GOOGLE CLIENT ID: " + googleClientId);
+Console.WriteLine("GOOGLE CLIENT SECRET: " + (string.IsNullOrWhiteSpace(googleClientSecret) ? "MISSING" : "OK"));
+
 app.MapGet("/", () => Results.Ok(new { app = "Family Planner API" }));
 app.MapControllers().RequireAuthorization(new AuthorizeAttribute());
 
