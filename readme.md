@@ -154,6 +154,7 @@ Set this environment variable in Railway:
 
 ```bash
 Cors__AllowedOrigins__0=https://family-planner-roan.vercel.app
+PublicFrontendOrigin=https://family-planner-roan.vercel.app
 ```
 
 If you also want to allow local frontend development against the Railway API,

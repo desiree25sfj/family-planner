@@ -24,6 +24,9 @@ var googleClientSecret = GetGoogleConfigurationValue("ClientSecret");
 var isGoogleAuthConfigured =
     !string.IsNullOrWhiteSpace(googleClientId) &&
     !string.IsNullOrWhiteSpace(googleClientSecret);
+var publicFrontendOrigin = builder.Configuration["PublicFrontendOrigin"] ??
+    allowedFrontendOrigins.FirstOrDefault(origin =>
+        origin.StartsWith("https://", StringComparison.OrdinalIgnoreCase));
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
@@ -81,6 +84,7 @@ if (isGoogleAuthConfigured)
         options.Scope.Add("openid");
         options.Scope.Add("email");
         options.Scope.Add("profile");
+        options.CallbackPath = "/signin-google";
         options.SaveTokens = false;
         options.Events.OnCreatingTicket = async context =>
         {
@@ -168,11 +172,25 @@ var forwardedHeadersOptions = new ForwardedHeadersOptions
     ForwardedHeaders =
         ForwardedHeaders.XForwardedFor |
         ForwardedHeaders.XForwardedHost |
-        ForwardedHeaders.XForwardedProto
+        ForwardedHeaders.XForwardedProto,
+    ForwardLimit = null
 };
 forwardedHeadersOptions.KnownNetworks.Clear();
 forwardedHeadersOptions.KnownProxies.Clear();
 app.UseForwardedHeaders(forwardedHeadersOptions);
+app.Use((context, next) =>
+{
+    if (!app.Environment.IsDevelopment() &&
+        !string.IsNullOrWhiteSpace(publicFrontendOrigin) &&
+        Uri.TryCreate(publicFrontendOrigin, UriKind.Absolute, out var publicOrigin) &&
+        IsRailwayHost(context.Request.Host.Host))
+    {
+        context.Request.Scheme = publicOrigin.Scheme;
+        context.Request.Host = HostString.FromUriComponent(publicOrigin);
+    }
+
+    return next();
+});
 app.UseHttpsRedirection();
 app.UseCors("FrontendClient");
 app.Use(async (context, next) =>
@@ -212,4 +230,10 @@ string? GetGoogleConfigurationValue(string key)
 {
     return builder.Configuration[$"Authentication:Google:{key}"] ??
         builder.Configuration[$"Authentication__Google__{key}"];
+}
+
+static bool IsRailwayHost(string? host)
+{
+    return host?.EndsWith(".up.railway.app", StringComparison.OrdinalIgnoreCase) == true ||
+        host?.Contains(".railway.app", StringComparison.OrdinalIgnoreCase) == true;
 }
