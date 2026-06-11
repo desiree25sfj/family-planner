@@ -74,6 +74,10 @@ if (isGoogleAuthConfigured)
     {
         options.ClientId = googleClientId!;
         options.ClientSecret = googleClientSecret!;
+        options.Scope.Clear();
+        options.Scope.Add("openid");
+        options.Scope.Add("email");
+        options.Scope.Add("profile");
         options.SaveTokens = false;
         options.Events.OnCreatingTicket = async context =>
         {

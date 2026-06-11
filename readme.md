@@ -190,10 +190,18 @@ Create an OAuth 2.0 Client ID in Google Cloud Console:
 - Application type: Web application
 - Authorized JavaScript origins:
   - `http://localhost:5173`
-  - your Vercel frontend origin, for example `https://family-planner-roan.vercel.app`
+  - `https://family-planner-roan.vercel.app`
 - Authorized redirect URIs:
   - `http://localhost:5123/signin-google`
-  - your Railway backend callback, for example `https://family-planner-api-production.up.railway.app/signin-google`
+  - your backend callback, for example `https://family-planner-api-production.up.railway.app/signin-google`
+
+Do not use the Vercel frontend URL as the Google redirect URI unless the backend
+is also served from that same origin. With the current backend-owned OAuth flow,
+Google redirects to ASP.NET Core's callback endpoint on the API host:
+
+```text
+https://your-backend-url/signin-google
+```
 
 Set these variables on the backend environment:
 
