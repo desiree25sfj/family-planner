@@ -34,6 +34,7 @@ function App() {
   const [isWeekPlanSaving, setIsWeekPlanSaving] = useState(false)
   const [isAddingGroceryItem, setIsAddingGroceryItem] = useState(false)
   const [processedInviteToken, setProcessedInviteToken] = useState<string | null>(null)
+  const [pendingEditMealId, setPendingEditMealId] = useState<number | null>(null)
   const [pendingGroceryItemIds, setPendingGroceryItemIds] = useState<Set<number>>(
     () => new Set(),
   )
@@ -140,7 +141,9 @@ function App() {
       id,
       name: meal.name,
       recipeInstructions: meal.recipeInstructions ?? null,
-      ingredients: meal.ingredients,
+      isDraft:
+        !meal.recipeInstructions?.trim() || (meal.ingredients?.length ?? 0) === 0,
+      ingredients: meal.ingredients ?? [],
     }
 
     applyMealUpdate(optimisticMeal)
@@ -186,7 +189,7 @@ function App() {
 
   async function assignMeal(day: DayOfWeek, meal: MealResponseDto) {
     if (isWeekPlanSaving) {
-      return
+      return false
     }
 
     const existingAssignment = plannedMeals[day]
@@ -224,15 +227,51 @@ function App() {
       }))
       await refreshGroceryList()
       setStatusMessage('')
+      return true
     } catch (error) {
       setPlannedMeals(previousPlannedMeals)
       setGroceryItems(previousGroceryItems)
       setStatusMessage(
         getApiErrorMessage(error, 'Could not update week plan. Check that the API is running.'),
       )
+      return false
     } finally {
       setIsWeekPlanSaving(false)
     }
+  }
+
+  async function createAndAssignMeal(day: DayOfWeek, mealName: string) {
+    const trimmedName = mealName.trim()
+
+    if (!trimmedName || isWeekPlanSaving) {
+      return false
+    }
+
+    try {
+      const createdMeal = await mealsApi.create({
+        name: trimmedName,
+        recipeInstructions: null,
+        ingredients: [],
+      })
+      setMeals((currentMeals) => [createdMeal, ...currentMeals])
+      const assigned = await assignMeal(day, createdMeal)
+
+      if (assigned) {
+        setStatusMessage('')
+      }
+
+      return assigned
+    } catch (error) {
+      setStatusMessage(
+        getApiErrorMessage(error, 'Could not quick add meal. Check that the API is running.'),
+      )
+      return false
+    }
+  }
+
+  function editMealFromPlanner(meal: MealResponseDto) {
+    setPendingEditMealId(meal.id)
+    setActivePage('meals')
   }
 
   async function clearMeal(day: DayOfWeek) {
@@ -496,7 +535,9 @@ function App() {
           availableMeals={meals}
           plannedMeals={plannedMeals}
           onAssignMeal={assignMeal}
+          onCreateAndAssignMeal={createAndAssignMeal}
           onClearMeal={clearMeal}
+          onEditMeal={editMealFromPlanner}
           isSaving={isWeekPlanSaving}
         />
       )}
@@ -506,6 +547,8 @@ function App() {
           onCreateMeal={createMeal}
           onUpdateMeal={updateMeal}
           onDeleteMeal={deleteMeal}
+          editMealId={pendingEditMealId}
+          onEditMealHandled={() => setPendingEditMealId(null)}
         />
       )}
       {activePage === 'grocery' && (

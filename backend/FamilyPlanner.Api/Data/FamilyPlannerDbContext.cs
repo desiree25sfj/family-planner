@@ -91,6 +91,7 @@ public class FamilyPlannerDbContext(DbContextOptions<FamilyPlannerDbContext> opt
         {
             entity.Property(meal => meal.Name).HasMaxLength(120);
             entity.Property(meal => meal.RecipeInstructions).HasMaxLength(4000);
+            entity.Property(meal => meal.IsDraft).HasDefaultValue(false);
             entity.HasIndex(meal => new { meal.HouseholdId, meal.Name }).IsUnique();
 
             entity.HasOne(meal => meal.Household)

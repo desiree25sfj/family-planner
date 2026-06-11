@@ -1,4 +1,4 @@
-import { useMemo, useState, type KeyboardEvent, type MouseEvent } from 'react'
+import { useMemo, useState, type FormEvent, type KeyboardEvent, type MouseEvent } from 'react'
 import { PageHeader } from '../components/PageHeader'
 import type { MealResponseDto } from '../types/meal'
 import type { DayOfWeek, PlannedMealsByDay } from '../types/weekPlan'
@@ -17,7 +17,9 @@ type WeekViewPageProps = {
   availableMeals: MealResponseDto[]
   plannedMeals: PlannedMealsByDay
   onAssignMeal: (day: DayOfWeek, meal: MealResponseDto) => void
+  onCreateAndAssignMeal: (day: DayOfWeek, mealName: string) => Promise<boolean>
   onClearMeal: (day: DayOfWeek) => void
+  onEditMeal: (meal: MealResponseDto) => void
   isSaving: boolean
 }
 
@@ -25,10 +27,15 @@ export function WeekViewPage({
   availableMeals,
   plannedMeals,
   onAssignMeal,
+  onCreateAndAssignMeal,
   onClearMeal,
+  onEditMeal,
   isSaving,
 }: WeekViewPageProps) {
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('Monday')
+  const [quickMealName, setQuickMealName] = useState('')
+  const [quickAddError, setQuickAddError] = useState('')
+  const [isQuickAdding, setIsQuickAdding] = useState(false)
 
   const selectedMeal = plannedMeals[selectedDay]?.meal
   const plannedMealCount = useMemo(
@@ -51,6 +58,28 @@ export function WeekViewPage({
 
   function stopCardClick(event: MouseEvent<HTMLButtonElement>) {
     event.stopPropagation()
+  }
+
+  async function quickAddMeal(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const mealName = quickMealName.trim()
+
+    if (!mealName) {
+      setQuickAddError('Meal name is required.')
+      return
+    }
+
+    try {
+      setIsQuickAdding(true)
+      const added = await onCreateAndAssignMeal(selectedDay, mealName)
+
+      if (added) {
+        setQuickMealName('')
+        setQuickAddError('')
+      }
+    } finally {
+      setIsQuickAdding(false)
+    }
   }
 
   return (
@@ -121,6 +150,11 @@ export function WeekViewPage({
                           Planned
                         </span>
                       )}
+                      {meal?.isDraft && (
+                        <span className="rounded-md bg-marigold/15 px-2 py-1 text-xs font-semibold text-ink">
+                          Draft
+                        </span>
+                      )}
                     </div>
 
                     {meal ? (
@@ -131,6 +165,18 @@ export function WeekViewPage({
                         <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted">
                           {getMealSummary(meal)}
                         </p>
+                        {meal.isDraft && (
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              stopCardClick(event)
+                              onEditMeal(meal)
+                            }}
+                            className="mt-3 text-sm font-semibold text-sage hover:text-ink"
+                          >
+                            Add details
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <div className="mt-3 rounded-lg border border-dashed border-oat bg-paper/60 p-3">
@@ -189,11 +235,43 @@ export function WeekViewPage({
             </p>
           </div>
 
+          <form
+            className="mt-4 rounded-lg border border-oat bg-paper/60 p-3"
+            onSubmit={quickAddMeal}
+          >
+            <label className="field-label" htmlFor="quick-meal-name">
+              + Add meal (quick)
+            </label>
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row lg:flex-col">
+              <input
+                id="quick-meal-name"
+                value={quickMealName}
+                disabled={isQuickAdding}
+                onChange={(event) => {
+                  setQuickMealName(event.target.value)
+                  setQuickAddError('')
+                }}
+                className="field mt-0 min-w-0 flex-1"
+                placeholder="Type a quick dinner idea..."
+              />
+              <button
+                type="submit"
+                disabled={isSaving || isQuickAdding}
+                className="btn-primary"
+              >
+                {isQuickAdding ? 'Adding...' : 'Add'}
+              </button>
+            </div>
+            {quickAddError && (
+              <p className="mt-2 text-sm font-medium text-berry">{quickAddError}</p>
+            )}
+          </form>
+
           {availableMeals.length === 0 ? (
             <div className="mt-4 rounded-xl border border-dashed border-oat bg-paper/60 p-4">
               <h3 className="text-sm font-semibold text-ink">No meals available</h3>
               <p className="mt-2 text-sm leading-6 text-muted">
-                Add a meal on the Meals page, then return here to plan the week.
+                Quick add a meal here, or add a full recipe on the Meals page.
               </p>
             </div>
           ) : (
@@ -218,6 +296,11 @@ export function WeekViewPage({
                     <span className="block break-words text-sm font-medium text-ink">
                       {meal.name}
                     </span>
+                    {meal.isDraft && (
+                      <span className="mt-1 inline-flex rounded-md bg-marigold/15 px-2 py-1 text-xs font-semibold text-ink">
+                        Draft
+                      </span>
+                    )}
                     <span className="mt-1 block line-clamp-2 text-sm leading-6 text-muted">
                       {getMealSummary(meal)}
                     </span>
@@ -248,5 +331,5 @@ function getMealSummary(meal: MealResponseDto) {
     return meal.ingredients.join(', ')
   }
 
-  return meal.recipeInstructions || 'No meal details yet.'
+  return meal.recipeInstructions || 'Add details when you have time.'
 }

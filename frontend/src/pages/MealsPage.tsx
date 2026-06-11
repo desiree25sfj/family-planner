@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { PageHeader } from '../components/PageHeader'
 import type { CreateMealDto, MealResponseDto, UpdateMealDto } from '../types/meal'
 
@@ -19,6 +19,8 @@ type MealsPageProps = {
   onCreateMeal: (meal: CreateMealDto) => Promise<boolean>
   onUpdateMeal: (id: number, meal: UpdateMealDto) => Promise<boolean>
   onDeleteMeal: (id: number) => Promise<boolean>
+  editMealId?: number | null
+  onEditMealHandled?: () => void
 }
 
 export function MealsPage({
@@ -26,6 +28,8 @@ export function MealsPage({
   onCreateMeal,
   onUpdateMeal,
   onDeleteMeal,
+  editMealId,
+  onEditMealHandled,
 }: MealsPageProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingMealId, setEditingMealId] = useState<number | null>(null)
@@ -38,6 +42,21 @@ export function MealsPage({
     [editingMealId, meals],
   )
   const modalTitle = editingMeal ? 'Edit Meal' : 'Add Meal'
+
+  useEffect(() => {
+    if (!editMealId) {
+      return
+    }
+
+    const meal = meals.find((currentMeal) => currentMeal.id === editMealId)
+
+    if (!meal) {
+      return
+    }
+
+    openEditModal(meal)
+    onEditMealHandled?.()
+  }, [editMealId, meals, onEditMealHandled])
 
   function openCreateModal() {
     setEditingMealId(null)
@@ -129,7 +148,14 @@ export function MealsPage({
             className="card card-pad flex min-h-56 min-w-0 flex-col"
           >
             <div className="flex-1">
-              <h2 className="break-words font-semibold text-ink">{meal.name}</h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="break-words font-semibold text-ink">{meal.name}</h2>
+                {meal.isDraft && (
+                  <span className="rounded-md bg-marigold/15 px-2 py-1 text-xs font-semibold text-ink">
+                    Draft
+                  </span>
+                )}
+              </div>
               <p className="mt-2 line-clamp-3 break-words text-sm leading-6 text-muted">
                 {meal.recipeInstructions || 'No recipe instructions yet.'}
               </p>

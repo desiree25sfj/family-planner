@@ -46,6 +46,7 @@ public class MealService(FamilyPlannerDbContext dbContext, CurrentHouseholdConte
             RecipeInstructions = NormalizeOptionalText(dto.RecipeInstructions),
             Ingredients = ToIngredientEntities(dto.Ingredients)
         };
+        meal.IsDraft = IsDraftMeal(meal.RecipeInstructions, meal.Ingredients);
 
         dbContext.Meals.Add(meal);
         await dbContext.SaveChangesAsync();
@@ -81,6 +82,7 @@ public class MealService(FamilyPlannerDbContext dbContext, CurrentHouseholdConte
         // child rows keeps the code obvious and avoids premature diff logic.
         meal.Ingredients.Clear();
         meal.Ingredients.AddRange(ToIngredientEntities(dto.Ingredients));
+        meal.IsDraft = IsDraftMeal(meal.RecipeInstructions, meal.Ingredients);
 
         await dbContext.SaveChangesAsync();
 
@@ -121,6 +123,7 @@ public class MealService(FamilyPlannerDbContext dbContext, CurrentHouseholdConte
             Id = meal.Id,
             Name = meal.Name,
             RecipeInstructions = meal.RecipeInstructions,
+            IsDraft = meal.IsDraft,
             Ingredients = meal.Ingredients
                 .OrderBy(ingredient => ingredient.Id)
                 .Select(ingredient => ingredient.Name)
@@ -128,9 +131,9 @@ public class MealService(FamilyPlannerDbContext dbContext, CurrentHouseholdConte
         };
     }
 
-    private static List<MealIngredient> ToIngredientEntities(IEnumerable<string> ingredients)
+    private static List<MealIngredient> ToIngredientEntities(IEnumerable<string>? ingredients)
     {
-        return ingredients
+        return (ingredients ?? [])
             .Select(NormalizeOptionalText)
             .Where(ingredient => ingredient is not null)
             .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -147,6 +150,11 @@ public class MealService(FamilyPlannerDbContext dbContext, CurrentHouseholdConte
     {
         var trimmed = value?.Trim();
         return string.IsNullOrWhiteSpace(trimmed) ? null : trimmed;
+    }
+
+    private static bool IsDraftMeal(string? recipeInstructions, IReadOnlyCollection<MealIngredient> ingredients)
+    {
+        return string.IsNullOrWhiteSpace(recipeInstructions) || ingredients.Count == 0;
     }
 }
 
